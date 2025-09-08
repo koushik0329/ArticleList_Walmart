@@ -9,6 +9,8 @@ import UIKit
 
 class ArticleViewController: UIViewController, UISearchBarDelegate, UITableViewDelegate, UITableViewDataSource {
     
+    private let viewModel = ArticleViewModel()
+    
     var searchBar: UISearchBar!
     var articleTableView : UITableView!
     
@@ -19,6 +21,12 @@ class ArticleViewController: UIViewController, UISearchBarDelegate, UITableViewD
         
         setupSearchBar()
         setupTableView()
+        
+        viewModel.getDataFromServer { [weak self] in
+                DispatchQueue.main.async {
+                    self?.articleTableView.reloadData()
+                }
+            }
     }
     
     func setupSearchBar() {
@@ -44,6 +52,8 @@ class ArticleViewController: UIViewController, UISearchBarDelegate, UITableViewD
         articleTableView.register(ArticleTableViewCell.self, forCellReuseIdentifier: "ArticleCell")
         view.addSubview(articleTableView)
         
+        articleTableView.rowHeight = UITableView.automaticDimension
+        
         NSLayoutConstraint.activate([
             articleTableView.topAnchor.constraint(equalTo: searchBar.bottomAnchor),
             articleTableView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
@@ -54,15 +64,18 @@ class ArticleViewController: UIViewController, UISearchBarDelegate, UITableViewD
     }
     
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return 10
+        return viewModel.getArticleCount()
     }
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         guard let cell = tableView.dequeueReusableCell(withIdentifier: "ArticleCell", for: indexPath) as? ArticleTableViewCell else {
             return UITableViewCell()
         }
-        var indexPath = indexPath.row
-        cell.configure(cellText: indexPath)
+        
+        if let article = viewModel.getArticle(at: indexPath.row) {
+                cell.configure(with: article)
+        }
+        
         return cell
     }
 }

@@ -73,7 +73,7 @@ class ArticleTableViewCell : UITableViewCell {
     func configure(with article: Article) {
         authorLabel.text = article.author
         descriptionLabel.text = article.description
-        articleImageView.image = UIImage(named: article.image!)
+//        articleImageView.image = UIImage(named: article.image)
         publishedDateLabel.text = article.published_date
     }
 }
