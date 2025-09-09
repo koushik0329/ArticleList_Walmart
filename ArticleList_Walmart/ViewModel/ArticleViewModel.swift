@@ -5,7 +5,13 @@
 //  Created by Koushik Reddy Kambham on 9/8/25.
 //
 
-class ArticleViewModel {
+protocol ArticleViewModelProtocol {
+    func getDataFromServer(closure: @escaping (() -> Void))
+    func getArticleCount() -> Int
+    func getArticle(at index: Int) -> Article?
+}
+
+class ArticleViewModel : ArticleViewModelProtocol{
     var articles: [Article] = []
     
     var networkManager = NetworkManager.shared
