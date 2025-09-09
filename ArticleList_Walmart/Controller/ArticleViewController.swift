@@ -52,8 +52,6 @@ class ArticleViewController: UIViewController, UISearchBarDelegate, UITableViewD
         articleTableView.register(ArticleTableViewCell.self, forCellReuseIdentifier: "ArticleCell")
         view.addSubview(articleTableView)
         
-        articleTableView.rowHeight = UITableView.automaticDimension
-        
         NSLayoutConstraint.activate([
             articleTableView.topAnchor.constraint(equalTo: searchBar.bottomAnchor),
             articleTableView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
@@ -77,5 +75,9 @@ class ArticleViewController: UIViewController, UISearchBarDelegate, UITableViewD
         }
         
         return cell
+    }
+    
+    func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
+        UITableView.automaticDimension
     }
 }

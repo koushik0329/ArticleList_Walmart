@@ -11,9 +11,16 @@ struct ArticleList : Codable {
     var articles : [Article]?
 }
 
-struct Article : Codable {
-    let author : String?
-    let description : String?
-    let image : String?
-    let published_date : String?
+struct Article: Codable {
+    let author: String?
+    let description: String?
+    let urlToImage: String?
+    let publishedAt: String?
+
+    enum CodingKeys: String, CodingKey {
+        case author, description
+        case urlToImage
+        case publishedAt
+    }
 }
+

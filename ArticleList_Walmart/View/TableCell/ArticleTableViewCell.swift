@@ -24,22 +24,26 @@ class ArticleTableViewCell : UITableViewCell {
     }
     
     func setupCell() {
-        authorLabel.font = UIFont.systemFont(ofSize: 16)
+        authorLabel.font = UIFont.systemFont(ofSize: 16, weight: .bold)
         authorLabel.textColor = .systemBlue
         authorLabel.translatesAutoresizingMaskIntoConstraints = false
         contentView.addSubview(authorLabel)
         
         descriptionLabel.translatesAutoresizingMaskIntoConstraints = false
+        descriptionLabel.font = UIFont.systemFont(ofSize: 14)
         descriptionLabel.numberOfLines = 0
-        descriptionLabel.textColor = .label
+        descriptionLabel.textColor = .systemGray
         contentView.addSubview(descriptionLabel)
         
-        articleImageView.contentMode = .scaleAspectFit
+        articleImageView.contentMode = .scaleAspectFill
+        articleImageView.clipsToBounds = true
+        articleImageView.layer.cornerRadius = 8
         articleImageView.translatesAutoresizingMaskIntoConstraints = false
         contentView.addSubview(articleImageView)
         
-        publishedDateLabel.font = UIFont.systemFont(ofSize: 14)
-        publishedDateLabel.textColor = .label
+        publishedDateLabel.font = UIFont.systemFont(ofSize: 13)
+        publishedDateLabel.textColor = .lightGray
+        publishedDateLabel.translatesAutoresizingMaskIntoConstraints = false
         contentView.addSubview(publishedDateLabel)
         
         sqaureIcon.image = UIImage(systemName: "square.and.arrow.up")
@@ -48,32 +52,77 @@ class ArticleTableViewCell : UITableViewCell {
         contentView.addSubview(sqaureIcon)
         
         NSLayoutConstraint.activate([
-            authorLabel.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 8),
-            authorLabel.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 10),
-            authorLabel.heightAnchor.constraint(equalToConstant: 20),
+            authorLabel.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 10),
+            authorLabel.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 16),
+            authorLabel.trailingAnchor.constraint(equalTo: articleImageView.leadingAnchor, constant: -8),
             
-            descriptionLabel.topAnchor.constraint(equalTo: authorLabel.bottomAnchor, constant: 8),
+            descriptionLabel.topAnchor.constraint(equalTo: authorLabel.bottomAnchor, constant: 4),
             descriptionLabel.leadingAnchor.constraint(equalTo: authorLabel.leadingAnchor),
-            descriptionLabel.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -40),
+            descriptionLabel.trailingAnchor.constraint(equalTo: articleImageView.leadingAnchor, constant: -8),
             
-            articleImageView.leadingAnchor.constraint(equalTo: descriptionLabel.trailingAnchor, constant: 10),
-            articleImageView.heightAnchor.constraint(equalToConstant: 60),
-            articleImageView.widthAnchor.constraint(equalToConstant: 60),
+            articleImageView.centerYAnchor.constraint(equalTo: contentView.centerYAnchor),
+            articleImageView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -16),
+            articleImageView.heightAnchor.constraint(equalToConstant: 90),
+            articleImageView.widthAnchor.constraint(equalToConstant: 90),
             
-            sqaureIcon.topAnchor.constraint(equalTo: descriptionLabel.topAnchor, constant: 8),
-            sqaureIcon.leadingAnchor.constraint(equalTo: descriptionLabel.leadingAnchor),
-            sqaureIcon.heightAnchor.constraint(equalToConstant: 20),
-            sqaureIcon.widthAnchor.constraint(equalToConstant: 20),
+            sqaureIcon.topAnchor.constraint(equalTo: descriptionLabel.bottomAnchor, constant: 8),
+            sqaureIcon.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 16),
+            sqaureIcon.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -8),
+            sqaureIcon.heightAnchor.constraint(equalToConstant: 16),
+            sqaureIcon.widthAnchor.constraint(equalToConstant: 16),
             
-            publishedDateLabel.leadingAnchor.constraint(equalTo: sqaureIcon.trailingAnchor, constant: 10),
-            
+            publishedDateLabel.centerYAnchor.constraint(equalTo: sqaureIcon.centerYAnchor),
+            publishedDateLabel.leadingAnchor.constraint(equalTo: sqaureIcon.trailingAnchor, constant: 8),
+            publishedDateLabel.trailingAnchor.constraint(equalTo: articleImageView.leadingAnchor, constant: -8)
         ])
     }
     
     func configure(with article: Article) {
         authorLabel.text = article.author
         descriptionLabel.text = article.description
-//        articleImageView.image = UIImage(named: article.image)
-        publishedDateLabel.text = article.published_date
+
+        if let urlString = article.urlToImage, let url = URL(string: urlString) {
+            loadImage(from: url)
+        }
+
+        if let publishedAt = article.publishedAt {
+            publishedDateLabel.text = formatDate(publishedAt)
+        }
     }
+
+    
+    private func loadImage(from url: URL) {
+        articleImageView.image = UIImage(systemName: "photo")
+        
+        URLSession.shared.dataTask(with: url) { [weak self] data, response, error in
+            guard let data = data, error == nil, let image = UIImage(data: data) else {
+                return
+            }
+            
+            DispatchQueue.main.async {
+                self?.articleImageView.image = image
+            }
+        }.resume()
+    }
+    
+    private func formatDate(_ dateString: String) -> String {
+        let isoFormatter = ISO8601DateFormatter()
+        isoFormatter.formatOptions = [.withInternetDateTime]
+
+        let displayFormatter = DateFormatter()
+        displayFormatter.dateFormat = "dd-MM-yyyy"
+
+        if let date = isoFormatter.date(from: dateString) {
+            return displayFormatter.string(from: date)
+        }
+
+        // fallback if fractional seconds exist
+        isoFormatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        if let date = isoFormatter.date(from: dateString) {
+            return displayFormatter.string(from: date)
+        }
+
+        return dateString
+    }
+
 }
