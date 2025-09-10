@@ -11,6 +11,8 @@ class ArticleViewController: UIViewController, UISearchBarDelegate, UITableViewD
     
     private let viewModel = ArticleViewModel()
     
+    var updateClosure: ((Article?) -> Void?)? = nil
+    
     var searchBar: UISearchBar!
     var articleTableView : UITableView!
     
@@ -82,8 +84,18 @@ class ArticleViewController: UIViewController, UISearchBarDelegate, UITableViewD
         UITableView.automaticDimension
     }
     
-    
-    
+    func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        let detailsVC = DetailsViewController()
+        
+        let selectedArticle = viewModel.getArticle(at: indexPath.row)
+        // pass the article to the details viewcontroller
+        detailsVC.article = selectedArticle
+        detailsVC.closure = { [weak self] article in
+                                print(article)
+                            }
+        
+        navigationController?.pushViewController(detailsVC, animated: true)
+    }
 }
 
 extension ArticleViewController {
