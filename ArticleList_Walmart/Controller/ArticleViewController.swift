@@ -34,6 +34,7 @@ class ArticleViewController: UIViewController, UISearchBarDelegate, UITableViewD
         searchBar.placeholder = "Search News"
         searchBar.translatesAutoresizingMaskIntoConstraints = false
         searchBar.delegate = self
+        searchBar.showsCancelButton = true
         view.addSubview(searchBar)
         
         NSLayoutConstraint.activate([
@@ -79,5 +80,31 @@ class ArticleViewController: UIViewController, UISearchBarDelegate, UITableViewD
     
     func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
         UITableView.automaticDimension
+    }
+    
+    
+    
+}
+
+extension ArticleViewController {
+    
+    func searchBarShouldBeginEditing(_ searchBar: UISearchBar) -> Bool {
+        return true
+    }
+    
+    func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {
+        viewModel.searchArticles(with: searchText)
+        articleTableView.reloadData()
+    }
+    
+    func searchBarCancelButtonClicked(_ searchBar: UISearchBar) {
+        searchBar.text = ""
+        searchBar.resignFirstResponder()
+        viewModel.resetSearch()
+        articleTableView.reloadData()
+    }
+    
+    func searchBarSearchButtonClicked(_ searchBar: UISearchBar) {
+        searchBar.resignFirstResponder()
     }
 }

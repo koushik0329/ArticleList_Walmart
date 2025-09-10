@@ -9,10 +9,14 @@ protocol ArticleViewModelProtocol {
     func getDataFromServer(closure: @escaping (() -> Void))
     func getArticleCount() -> Int
     func getArticle(at index: Int) -> Article?
+    func searchArticles(with: String)
+    func resetSearch()
 }
 
-class ArticleViewModel : ArticleViewModelProtocol{
+class ArticleViewModel: ArticleViewModelProtocol {
     var articles: [Article] = []
+    var filteredArticles: [Article] = []
+    var isSearching: Bool = false
     
     var networkManager = NetworkManager.shared
 
@@ -22,18 +26,37 @@ class ArticleViewModel : ArticleViewModelProtocol{
             
             let fetchedList = self.networkManager.parse(data: data)
             self.articles = fetchedList?.articles ?? []
+            self.filteredArticles = self.articles
             
             closure()
         }
     }
 
-        
     func getArticleCount() -> Int {
-        return articles.count
+        return filteredArticles.count
     }
-        
+
     func getArticle(at index: Int) -> Article? {
-        guard index < articles.count else { return nil }
-        return articles[index]
+        guard index < filteredArticles.count else { return nil }
+        return filteredArticles[index]
+    }
+
+    func searchArticles(with query: String) {
+        if query.isEmpty {
+            filteredArticles = articles
+            isSearching = false
+        } else {
+            filteredArticles = articles.filter { article in
+                (article.author?.lowercased().contains(query.lowercased()) ?? false) ||
+                (article.description?.lowercased().contains(query.lowercased()) ?? false)
+            }
+            isSearching = true
+        }
+    }
+
+    func resetSearch() {
+        filteredArticles = articles
+        isSearching = false
     }
 }
+

@@ -8,14 +8,14 @@
 import Foundation
 
 protocol Network {
-    func getData(from serverUrl: String, closure: @escaping (ArticleList?) -> Void)
+    func getData(from serverUrl: String, closure: @escaping (Data?) -> Void)
     func parse(data: Data?) -> ArticleList?
 }
 
 // MARK: - Network Manager with parse
-class NetworkManager {
+class NetworkManager : Network {
     static let shared = NetworkManager()
-    private init() {}
+    init() {}
     
     func getData(from serverUrl: String, closure: @escaping (Data?) -> Void) {
         guard let serverURL = URL(string: serverUrl) else {
