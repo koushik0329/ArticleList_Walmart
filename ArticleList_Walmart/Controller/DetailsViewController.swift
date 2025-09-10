@@ -9,11 +9,40 @@ import UIKit
 
 class DetailsViewController: UIViewController {
     
-    var textField: UITextField! = {
-        let textField = UITextField()
-        textField.translatesAutoresizingMaskIntoConstraints = false
-        textField.borderStyle = .roundedRect
-        return textField
+    private let commentTextField: UITextField = {
+        let commentTextField = UITextField()
+        commentTextField.translatesAutoresizingMaskIntoConstraints = false
+        commentTextField.font = UIFont.systemFont(ofSize: 14)
+        commentTextField.textColor = .label
+        commentTextField.backgroundColor = .systemGray6
+        commentTextField.placeholder = "Enter your comment"
+        return commentTextField
+    }()
+    
+    private let authorLabel: UILabel = {
+        let authorLabel = UILabel()
+        authorLabel.font = UIFont.systemFont(ofSize: 16, weight: .bold)
+        authorLabel.textColor = .systemBlue
+        authorLabel.translatesAutoresizingMaskIntoConstraints = false
+        return authorLabel
+    }()
+    
+    private let descriptionLabel: UILabel = {
+        let descriptionLabel = UILabel()
+        descriptionLabel.font = UIFont.systemFont(ofSize: 14)
+        descriptionLabel.textColor = .systemGray
+        descriptionLabel.numberOfLines = 0
+        descriptionLabel.translatesAutoresizingMaskIntoConstraints = false
+        return descriptionLabel
+    }()
+    
+    private let articleImageView: UIImageView = {
+        let articleImageView = UIImageView()
+        articleImageView.contentMode = .scaleAspectFill
+        articleImageView.clipsToBounds = true
+        articleImageView.layer.cornerRadius = 8
+        articleImageView.translatesAutoresizingMaskIntoConstraints = false
+        return articleImageView
     }()
         
     var article: Article?
@@ -23,33 +52,69 @@ class DetailsViewController: UIViewController {
         super.viewDidLoad()
         
         setupUI()
+        configureDetails()
     }
     
-    func setupUI() {
+    private func setupUI() {
         view.backgroundColor = .white
-            
-        textField.text = article?.title ?? ""
-        view.addSubview(textField)
-    
+        
+        // Add subviews
+        view.addSubview(authorLabel)
+        view.addSubview(descriptionLabel)
+        view.addSubview(articleImageView)
+        view.addSubview(commentTextField)
+        
+        // AutoLayout
         NSLayoutConstraint.activate([
-            textField.centerYAnchor.constraint(equalTo: view.centerYAnchor),
-            textField.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
-            textField.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
-            textField.heightAnchor.constraint(equalToConstant: 120)
+            articleImageView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 20),
+            articleImageView.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            articleImageView.widthAnchor.constraint(equalToConstant: 100),
+            articleImageView.heightAnchor.constraint(equalToConstant: 100),
+            
+            authorLabel.topAnchor.constraint(equalTo: articleImageView.bottomAnchor, constant: 20),
+            authorLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16),
+            authorLabel.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16),
+            
+            descriptionLabel.topAnchor.constraint(equalTo: authorLabel.bottomAnchor, constant: 4),
+            descriptionLabel.leadingAnchor.constraint(equalTo: authorLabel.leadingAnchor),
+            descriptionLabel.trailingAnchor.constraint(equalTo: authorLabel.trailingAnchor),
+            
+            commentTextField.topAnchor.constraint(equalTo: descriptionLabel.bottomAnchor, constant: 20),
+            commentTextField.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16),
+            commentTextField.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16),
+            commentTextField.heightAnchor.constraint(equalToConstant: 120)
         ])
             
         navigationItem.leftBarButtonItem = UIBarButtonItem(
-                barButtonSystemItem: .cancel,
-                target: self,
-                action: #selector(backToPreviousScreen)
-            )
+            barButtonSystemItem: .cancel,
+            target: self,
+            action: #selector(backToPreviousScreen)
+        )
     }
     
-    @objc func backToPreviousScreen() {
-        article?.title = textField.text ?? ""
+    private func configureDetails() {
+        authorLabel.text = article?.author
+        descriptionLabel.text = article?.description
         
-        guard let closure = closure else { return }
-        closure(article)
-        self.navigationController?.popViewController(animated: true)
+        if let imageUrlString = article?.urlToImage, let imageUrl = URL(string: imageUrlString) {
+            NetworkManager.shared.getData(from: imageUrl.absoluteString) { [weak self] data in
+                guard let self = self,
+                      let data = data,
+                      let image = UIImage(data: data) else { return }
+                
+                DispatchQueue.main.async {
+                    self.articleImageView.image = image
+                }
+            }
+        } else {
+            articleImageView.image = UIImage(systemName: "photo")
+        }
+    }
+
+    
+    @objc private func backToPreviousScreen() {
+        article?.comment =  commentTextField.text!
+        closure?(article)
+        navigationController?.popViewController(animated: true)
     }
 }

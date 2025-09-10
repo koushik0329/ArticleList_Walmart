@@ -13,7 +13,7 @@ struct ArticleList : Decodable {
 
 struct Article: Decodable {
     let author: String?
-    var title: String
+    var comment: String
     let description: String?
     let urlToImage: String?
     let publishedAt: String?
@@ -27,7 +27,7 @@ struct Article: Decodable {
         case author, description
         case urlToImage
         case publishedAt
-        case title
+        case comment = "title"
     }
 }
 
