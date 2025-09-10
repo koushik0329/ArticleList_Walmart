@@ -4,16 +4,54 @@
 //
 //  Created by Koushik Reddy Kambham on 9/8/25.
 //
+
 import UIKit
 
-class ArticleTableViewCell : UITableViewCell {
+class ArticleTableViewCell: UITableViewCell {
     
-    let authorLabel = UILabel()
-    let descriptionLabel = UILabel()
-    let articleImageView = UIImageView()
-    let publishedDateLabel = UILabel()
-    let sqaureIcon = UIImageView()
+    let authorLabel: UILabel = {
+        let label = UILabel()
+        label.font = UIFont.systemFont(ofSize: 16, weight: .bold)
+        label.textColor = .systemBlue
+        label.translatesAutoresizingMaskIntoConstraints = false
+        return label
+    }()
     
+    let descriptionLabel: UILabel = {
+        let label = UILabel()
+        label.font = UIFont.systemFont(ofSize: 14)
+        label.textColor = .systemGray
+        label.numberOfLines = 0
+        label.translatesAutoresizingMaskIntoConstraints = false
+        return label
+    }()
+    
+    let articleImageView: UIImageView = {
+        let imageView = UIImageView()
+        imageView.contentMode = .scaleAspectFill
+        imageView.clipsToBounds = true
+        imageView.layer.cornerRadius = 8
+        imageView.translatesAutoresizingMaskIntoConstraints = false
+        return imageView
+    }()
+    
+    let publishedDateLabel: UILabel = {
+        let label = UILabel()
+        label.font = UIFont.systemFont(ofSize: 13)
+        label.textColor = .lightGray
+        label.translatesAutoresizingMaskIntoConstraints = false
+        return label
+    }()
+    
+    let squareIcon: UIImageView = {
+        let imageView = UIImageView()
+        imageView.image = UIImage(systemName: "square.and.arrow.up")
+        imageView.tintColor = .systemBlue
+        imageView.translatesAutoresizingMaskIntoConstraints = false
+        return imageView
+    }()
+    
+    // MARK: Init
     override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
         super.init(style: style, reuseIdentifier: reuseIdentifier)
         setupCell()
@@ -23,33 +61,13 @@ class ArticleTableViewCell : UITableViewCell {
         fatalError("init(coder:) has not been implemented")
     }
     
-    func setupCell() {
-        authorLabel.font = UIFont.systemFont(ofSize: 16, weight: .bold)
-        authorLabel.textColor = .systemBlue
-        authorLabel.translatesAutoresizingMaskIntoConstraints = false
+    
+    private func setupCell() {
         contentView.addSubview(authorLabel)
-        
-        descriptionLabel.translatesAutoresizingMaskIntoConstraints = false
-        descriptionLabel.font = UIFont.systemFont(ofSize: 14)
-        descriptionLabel.numberOfLines = 0
-        descriptionLabel.textColor = .systemGray
         contentView.addSubview(descriptionLabel)
-        
-        articleImageView.contentMode = .scaleAspectFill
-        articleImageView.clipsToBounds = true
-        articleImageView.layer.cornerRadius = 8
-        articleImageView.translatesAutoresizingMaskIntoConstraints = false
         contentView.addSubview(articleImageView)
-        
-        publishedDateLabel.font = UIFont.systemFont(ofSize: 13)
-        publishedDateLabel.textColor = .lightGray
-        publishedDateLabel.translatesAutoresizingMaskIntoConstraints = false
         contentView.addSubview(publishedDateLabel)
-        
-        sqaureIcon.image = UIImage(systemName: "square.and.arrow.up")
-        sqaureIcon.tintColor = .systemBlue
-        sqaureIcon.translatesAutoresizingMaskIntoConstraints = false
-        contentView.addSubview(sqaureIcon)
+        contentView.addSubview(squareIcon)
         
         NSLayoutConstraint.activate([
             authorLabel.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 10),
@@ -65,64 +83,36 @@ class ArticleTableViewCell : UITableViewCell {
             articleImageView.heightAnchor.constraint(equalToConstant: 90),
             articleImageView.widthAnchor.constraint(equalToConstant: 90),
             
-            sqaureIcon.topAnchor.constraint(equalTo: descriptionLabel.bottomAnchor, constant: 8),
-            sqaureIcon.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 16),
-            sqaureIcon.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -8),
-            sqaureIcon.heightAnchor.constraint(equalToConstant: 16),
-            sqaureIcon.widthAnchor.constraint(equalToConstant: 16),
+            squareIcon.topAnchor.constraint(equalTo: descriptionLabel.bottomAnchor, constant: 8),
+            squareIcon.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 16),
+            squareIcon.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -8),
+            squareIcon.heightAnchor.constraint(equalToConstant: 16),
+            squareIcon.widthAnchor.constraint(equalToConstant: 16),
             
-            publishedDateLabel.centerYAnchor.constraint(equalTo: sqaureIcon.centerYAnchor),
-            publishedDateLabel.leadingAnchor.constraint(equalTo: sqaureIcon.trailingAnchor, constant: 8),
+            publishedDateLabel.centerYAnchor.constraint(equalTo: squareIcon.centerYAnchor),
+            publishedDateLabel.leadingAnchor.constraint(equalTo: squareIcon.trailingAnchor, constant: 8),
             publishedDateLabel.trailingAnchor.constraint(equalTo: articleImageView.leadingAnchor, constant: -8)
         ])
     }
     
+    
+    // MARK: Configure Cell
     func configure(with article: Article) {
         authorLabel.text = article.author
         descriptionLabel.text = article.description
-
-        if let urlString = article.urlToImage, let url = URL(string: urlString) {
-            loadImage(from: url)
-        }
-
-        if let publishedAt = article.publishedAt {
-            publishedDateLabel.text = formatDate(publishedAt)
-        }
-    }
-
-    
-    private func loadImage(from url: URL) {
-        articleImageView.image = UIImage(systemName: "photo")
+        publishedDateLabel.text = article.publishedDateOnly
         
-        URLSession.shared.dataTask(with: url) { [weak self] data, response, error in
-            guard let data = data, error == nil, let image = UIImage(data: data) else {
+        guard let imageUrl = article.urlToImage else {
+                articleImageView.image = UIImage(systemName: "photo") // fallback image
                 return
             }
             
+        NetworkManager.shared.getData(from: imageUrl) { [weak self] data in
+            guard let self = self, let data = data, let image = UIImage(data: data) else { return }
+                
             DispatchQueue.main.async {
-                self?.articleImageView.image = image
+                self.articleImageView.image = image
             }
-        }.resume()
-    }
-    
-    private func formatDate(_ dateString: String) -> String {
-        let isoFormatter = ISO8601DateFormatter()
-        isoFormatter.formatOptions = [.withInternetDateTime]
-
-        let displayFormatter = DateFormatter()
-        displayFormatter.dateFormat = "dd-MM-yyyy"
-
-        if let date = isoFormatter.date(from: dateString) {
-            return displayFormatter.string(from: date)
         }
-
-        // fallback if fractional seconds exist
-        isoFormatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
-        if let date = isoFormatter.date(from: dateString) {
-            return displayFormatter.string(from: date)
-        }
-
-        return dateString
     }
-
 }

@@ -1,46 +1,46 @@
 //
-//  Network.swift
+//  NetworkManager.swift
 //  ArticleList_Walmart
 //
 //  Created by Koushik Reddy Kambham on 9/8/25.
 //
 
-
 import Foundation
 
 protocol Network {
     func getData(from serverUrl: String, closure: @escaping (ArticleList?) -> Void)
+    func parse(data: Data?) -> ArticleList?
 }
 
-class NetworkManager: Network {
+// MARK: - Network Manager with parse
+class NetworkManager {
     static let shared = NetworkManager()
-
-    func getData(from serverUrl: String, closure: @escaping (ArticleList?) -> Void) {
-
+    private init() {}
+    
+    func getData(from serverUrl: String, closure: @escaping (Data?) -> Void) {
         guard let serverURL = URL(string: serverUrl) else {
-            print("Server URL is invalid")
+            print("Invalid URL")
+            closure(nil)
             return
         }
         
-        let urlSession = URLSession.shared
-        urlSession.dataTask(with: URLRequest(url: serverURL)) { data, response, error in
-            
+        URLSession.shared.dataTask(with: serverURL) { data, _, error in
             if let error = error {
-                print("Error fetching data: \(error)")
+                print("Network error: \(error)")
+                closure(nil)
                 return
             }
-            
-            guard let data = data else {
-                print("No data returned from the server")
-                return
-            }
-            
-            do {
-                let articleList = try JSONDecoder().decode(ArticleList.self, from: data)
-                closure(articleList)
-            } catch {
-                print("Error parsing JSON: \(error)")
-            }
+            closure(data)
         }.resume()
+    }
+    
+    func parse(data: Data?) -> ArticleList? {
+        guard let data = data else { return nil }
+        do {
+            return try JSONDecoder().decode(ArticleList.self, from: data)
+        } catch {
+            print("Parsing error: \(error)")
+            return nil
+        }
     }
 }

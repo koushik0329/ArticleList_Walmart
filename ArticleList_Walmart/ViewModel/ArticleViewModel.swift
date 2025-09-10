@@ -17,12 +17,16 @@ class ArticleViewModel : ArticleViewModelProtocol{
     var networkManager = NetworkManager.shared
 
     func getDataFromServer(closure: @escaping (() -> Void)) {
-            networkManager.getData(from: Server.endPoint.rawValue) { [weak self] (fetchedList: ArticleList?) in
-                guard let self = self else { return }
-                self.articles = fetchedList?.articles ?? []
-                closure()
+        networkManager.getData(from: Server.endPoint.rawValue) { [weak self] data in
+            guard let self = self else { return }
+            
+            let fetchedList = self.networkManager.parse(data: data)
+            self.articles = fetchedList?.articles ?? []
+            
+            closure()
         }
     }
+
         
     func getArticleCount() -> Int {
         return articles.count
