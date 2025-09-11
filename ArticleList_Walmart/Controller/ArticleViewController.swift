@@ -11,6 +11,8 @@ class ArticleViewController: UIViewController, UISearchBarDelegate, UITableViewD
     
     private let viewModel = ArticleViewModel()
     
+    private var searchTimer: Timer?
+    
     var updateClosure: ((Article?) -> Void?)? = nil
     
     var searchBar: UISearchBar!
@@ -112,8 +114,13 @@ extension ArticleViewController {
     }
     
     func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {
-        viewModel.searchArticles(with: searchText)
-        articleTableView.reloadData()
+        searchTimer?.invalidate()
+            
+        searchTimer = Timer.scheduledTimer(withTimeInterval: 0.5, repeats: false) { [weak self] _ in guard let self = self else { return }
+                
+        self.viewModel.searchArticles(with: searchText)
+        self.articleTableView.reloadData()
+        }
     }
     
     func searchBarCancelButtonClicked(_ searchBar: UISearchBar) {
