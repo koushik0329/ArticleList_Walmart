@@ -58,5 +58,15 @@ class ArticleViewModel: ArticleViewModelProtocol {
         filteredArticles = articles
         isSearching = false
     }
+    
+    func updateArticle(at index: Int, with updatedArticle: Article) {
+        if index < articles.count {
+            articles[index] = updatedArticle
+        }
+        
+        if !filteredArticles.isEmpty && index < filteredArticles.count {
+            filteredArticles[index] = updatedArticle
+        }
+    }
 }
 

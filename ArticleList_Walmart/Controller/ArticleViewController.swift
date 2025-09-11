@@ -88,10 +88,17 @@ class ArticleViewController: UIViewController, UISearchBarDelegate, UITableViewD
         let detailsVC = DetailsViewController()
         
         let selectedArticle = viewModel.getArticle(at: indexPath.row)
-        // pass the article to the details viewcontroller
+        
         detailsVC.article = selectedArticle
-        detailsVC.closure = { [weak self] article in
-                                print(article)
+        detailsVC.closure = { [weak self] updatedArticle in
+            guard let self = self,
+                  let updatedArticle = updatedArticle else { return }
+
+            self.viewModel.updateArticle(at: indexPath.row, with: updatedArticle)
+
+            DispatchQueue.main.async {
+                self.articleTableView.reloadRows(at: [indexPath], with: .none)
+            }
                             }
         
         navigationController?.pushViewController(detailsVC, animated: true)

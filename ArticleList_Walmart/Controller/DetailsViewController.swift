@@ -19,12 +19,14 @@ class DetailsViewController: UIViewController {
         return commentTextField
     }()
     
-    private let authorLabel: UILabel = {
-        let authorLabel = UILabel()
-        authorLabel.font = UIFont.systemFont(ofSize: 16, weight: .bold)
-        authorLabel.textColor = .systemBlue
-        authorLabel.translatesAutoresizingMaskIntoConstraints = false
-        return authorLabel
+    private var authorTextField: UITextField = {
+        var authorTextField = UITextField()
+        authorTextField.font = UIFont.systemFont(ofSize: 16, weight: .bold)
+        authorTextField.textColor = .systemBlue
+        authorTextField.translatesAutoresizingMaskIntoConstraints = false
+        authorTextField.borderStyle = .roundedRect
+        authorTextField.placeholder = "Enter author name"
+        return authorTextField
     }()
     
     private let descriptionLabel: UILabel = {
@@ -59,7 +61,7 @@ class DetailsViewController: UIViewController {
         view.backgroundColor = .white
         
         // Add subviews
-        view.addSubview(authorLabel)
+        view.addSubview(authorTextField)
         view.addSubview(descriptionLabel)
         view.addSubview(articleImageView)
         view.addSubview(commentTextField)
@@ -71,13 +73,13 @@ class DetailsViewController: UIViewController {
             articleImageView.widthAnchor.constraint(equalToConstant: 100),
             articleImageView.heightAnchor.constraint(equalToConstant: 100),
             
-            authorLabel.topAnchor.constraint(equalTo: articleImageView.bottomAnchor, constant: 20),
-            authorLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16),
-            authorLabel.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16),
+            authorTextField.topAnchor.constraint(equalTo: articleImageView.bottomAnchor, constant: 20),
+            authorTextField.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16),
+            authorTextField.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16),
             
-            descriptionLabel.topAnchor.constraint(equalTo: authorLabel.bottomAnchor, constant: 4),
-            descriptionLabel.leadingAnchor.constraint(equalTo: authorLabel.leadingAnchor),
-            descriptionLabel.trailingAnchor.constraint(equalTo: authorLabel.trailingAnchor),
+            descriptionLabel.topAnchor.constraint(equalTo: authorTextField.bottomAnchor, constant: 4),
+            descriptionLabel.leadingAnchor.constraint(equalTo: authorTextField.leadingAnchor),
+            descriptionLabel.trailingAnchor.constraint(equalTo: authorTextField.trailingAnchor),
             
             commentTextField.topAnchor.constraint(equalTo: descriptionLabel.bottomAnchor, constant: 20),
             commentTextField.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16),
@@ -90,10 +92,16 @@ class DetailsViewController: UIViewController {
             target: self,
             action: #selector(backToPreviousScreen)
         )
+        
+        navigationItem.rightBarButtonItem = UIBarButtonItem(
+            barButtonSystemItem: .save,
+            target: self,
+            action: #selector(saveAction)
+        )
     }
     
     private func configureDetails() {
-        authorLabel.text = article?.author
+        authorTextField.text = article?.author
         descriptionLabel.text = article?.description
         
         if let imageUrlString = article?.urlToImage, let imageUrl = URL(string: imageUrlString) {
@@ -111,9 +119,14 @@ class DetailsViewController: UIViewController {
         }
     }
 
-    
     @objc private func backToPreviousScreen() {
         article?.comment =  commentTextField.text!
+        closure?(article)
+        navigationController?.popViewController(animated: true)
+    }
+    
+    @objc private func saveAction() {
+        article?.author = authorTextField.text ?? ""
         closure?(article)
         navigationController?.popViewController(animated: true)
     }

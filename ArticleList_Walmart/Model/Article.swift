@@ -12,7 +12,7 @@ struct ArticleList : Decodable {
 }
 
 struct Article: Decodable {
-    let author: String?
+    var author: String?
     var comment: String
     let description: String?
     let urlToImage: String?
