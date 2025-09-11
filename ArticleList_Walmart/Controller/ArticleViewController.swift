@@ -9,7 +9,18 @@ import UIKit
 
 class ArticleViewController: UIViewController, UISearchBarDelegate, UITableViewDelegate, UITableViewDataSource {
     
-    private let viewModel = ArticleViewModel()
+//    private let viewModel = ArticleViewModel()
+    
+    var viewModel: ArticleViewModelProtocol!
+
+    init(viewModel: ArticleViewModelProtocol) {
+        super.init(nibName: nil, bundle: nil)
+        self.viewModel = viewModel
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
     
     private var searchTimer: Timer?
     

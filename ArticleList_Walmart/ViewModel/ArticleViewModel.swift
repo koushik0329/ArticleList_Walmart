@@ -11,6 +11,7 @@ protocol ArticleViewModelProtocol {
     func getArticle(at index: Int) -> Article?
     func searchArticles(with: String)
     func resetSearch()
+    func updateArticle(at index: Int, with updatedArticle: Article)
 }
 
 class ArticleViewModel: ArticleViewModelProtocol {
@@ -18,7 +19,12 @@ class ArticleViewModel: ArticleViewModelProtocol {
     var filteredArticles: [Article] = []
     var isSearching: Bool = false
     
-    var networkManager = NetworkManager.shared
+//    var networkManager = NetworkManager.shared
+    private let networkManager: NetworkManagerProtocol
+
+    init(networkManager: NetworkManagerProtocol) {
+        self.networkManager = networkManager
+    }
 
     func getDataFromServer(closure: @escaping (() -> Void)) {
         networkManager.getData(from: Server.endPoint.rawValue) { [weak self] data in

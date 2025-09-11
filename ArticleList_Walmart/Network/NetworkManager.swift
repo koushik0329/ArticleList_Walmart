@@ -7,13 +7,13 @@
 
 import Foundation
 
-protocol Network {
+protocol NetworkManagerProtocol {
     func getData(from serverUrl: String, closure: @escaping (Data?) -> Void)
     func parse(data: Data?) -> ArticleList?
 }
 
 // MARK: - Network Manager with parse
-class NetworkManager : Network {
+class NetworkManager : NetworkManagerProtocol {
     static let shared = NetworkManager()
     init() {}
     
