@@ -22,7 +22,8 @@ class ArticleViewController: UIViewController, UISearchBarDelegate, UITableViewD
         fatalError("init(coder:) has not been implemented")
     }
     
-    private var searchTimer: Timer?
+//    private var searchTimer: Timer?
+    private var pendingRequestWorkItem: DispatchWorkItem?
     
     var updateClosure: ((Article?) -> Void?)? = nil
     
@@ -125,13 +126,27 @@ extension ArticleViewController {
     }
     
     func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {
-        searchTimer?.invalidate()
-            
-        searchTimer = Timer.scheduledTimer(withTimeInterval: 0.5, repeats: false) { [weak self] _ in guard let self = self else { return }
+//        searchTimer?.invalidate()
+//            
+//        searchTimer = Timer.scheduledTimer(withTimeInterval: 0.5, repeats: false) { [weak self] _ in guard let self = self else { return }
+//                
+//        self.viewModel.searchArticles(with: searchText)
+//        self.articleTableView.reloadData()
+//        }
+        
+        // Cancel the currently pending item (if any)
+        pendingRequestWorkItem?.cancel()
                 
-        self.viewModel.searchArticles(with: searchText)
-        self.articleTableView.reloadData()
+        // Wrap the new request in a work item
+        let requestWorkItem = DispatchWorkItem { [weak self] in
+            guard let self = self else { return }
+            self.viewModel.searchArticles(with: searchText)
+            self.articleTableView.reloadData()
         }
+                
+        // Save the new work item and execute it after a delay (debounce interval)
+        pendingRequestWorkItem = requestWorkItem
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5, execute: requestWorkItem)
     }
     
     func searchBarCancelButtonClicked(_ searchBar: UISearchBar) {
