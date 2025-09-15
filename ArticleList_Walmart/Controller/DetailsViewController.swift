@@ -104,19 +104,34 @@ class DetailsViewController: UIViewController {
         authorTextField.text = article?.author
         descriptionLabel.text = article?.description
         
-        if let imageUrlString = article?.urlToImage, let imageUrl = URL(string: imageUrlString) {
-            NetworkManager.shared.getData(from: imageUrl.absoluteString) { [weak self] data in
-                guard let self = self,
-                      let data = data,
-                      let image = UIImage(data: data) else { return }
-                
+//        if let imageUrlString = article?.urlToImage, let imageUrl = URL(string: imageUrlString) {
+//            NetworkManager.shared.getData(from: imageUrl.absoluteString) { [weak self] data in
+//                guard let self = self,
+//                      let data = data,
+//                      let image = UIImage(data: data) else { return }
+//                
+//                DispatchQueue.main.async {
+//                    self.articleImageView.image = image
+//                }
+//            }
+//        } else {
+//            articleImageView.image = UIImage(systemName: "photo")
+//        }
+        
+        if let urlString = article?.urlToImage, let url = URL(string: urlString) {
+            URLSession.shared.dataTask(with: url) { [weak self] data, _, error in
+                guard let self = self, let data, error == nil else { return }
                 DispatchQueue.main.async {
-                    self.articleImageView.image = image
+                    self.articleImageView.image = UIImage(data: data) ?? UIImage(systemName: "photo")
                 }
-            }
+            }.resume()
         } else {
             articleImageView.image = UIImage(systemName: "photo")
         }
+        
+//        if article?.comment != nil {
+//            commentTextField.text = article?.comment
+//        }
     }
 
     @objc private func backToPreviousScreen() {

@@ -5,10 +5,13 @@
 //  Created by Koushik Reddy Kambham on 9/8/25.
 //
 
+import Foundation
+
 protocol ArticleViewModelProtocol {
-    func getDataFromServer(closure: @escaping (() -> Void))
+    func getDataFromServer(closure: @escaping ((NetworkState?) -> Void))
     func getArticleCount() -> Int
     func getArticle(at index: Int) -> Article?
+    var errorMessage: String { get }
     func searchArticles(with: String)
     func resetSearch()
     func updateArticle(at index: Int, with updatedArticle: Article)
@@ -19,6 +22,8 @@ class ArticleViewModel: ArticleViewModelProtocol {
     var filteredArticles: [Article] = []
     var isSearching: Bool = false
     
+    var errorState: NetworkState?
+    
 //    var networkManager = NetworkManager.shared
     private let networkManager: NetworkManagerProtocol
 
@@ -26,15 +31,35 @@ class ArticleViewModel: ArticleViewModelProtocol {
         self.networkManager = networkManager
     }
 
-    func getDataFromServer(closure: @escaping (() -> Void)) {
-        networkManager.getData(from: Server.endPoint.rawValue) { [weak self] data in
+    func getDataFromServer(closure: @escaping (NetworkState?) -> Void) {
+        networkManager.getData(from: Server.endPoint.rawValue) { [weak self] fetchedState in
             guard let self = self else { return }
             
-            let fetchedList = self.networkManager.parse(data: data)
-            self.articles = fetchedList?.articles ?? []
-            self.filteredArticles = self.articles
+            switch fetchedState {
+            case .isLoading, .invalidURL, .errorFetchingData, .noDataFromServer:
+                self.errorState = fetchedState
+                break
+            case .success(let fetchedData):
+                if let fetchedList = self.networkManager.parse(data: fetchedData) {
+                    self.articles = fetchedList.articles ?? []
+                    self.filteredArticles = self.articles
+                }
+                else {
+                    self.errorState = .noDataFromServer
+                }
+            }
             
-            closure()
+            DispatchQueue.main.async {
+                closure(self.errorState)
+            }
+            
+//            let fetchedList = self.networkManager.parse(data: data)
+//            self.articles = fetchedList?.articles ?? []
+//            self.filteredArticles = self.articles
+            
+//            DispatchQueue.main.async {
+//                closure(self.errorState)
+//            }
         }
     }
 
@@ -76,3 +101,18 @@ class ArticleViewModel: ArticleViewModelProtocol {
     }
 }
 
+extension ArticleViewModel {
+    var errorMessage: String {
+        guard let errorState = errorState else { return "" }
+        switch errorState {
+        case .invalidURL:
+            return "Invalid URL"
+        case .errorFetchingData:
+            return "Error fetching data"
+        case .noDataFromServer:
+            return "No data from server"
+        default :
+            return ""
+        }
+    }
+}

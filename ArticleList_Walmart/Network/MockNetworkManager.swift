@@ -7,8 +7,8 @@
 
 import Foundation
 
-class MockNetworkManager: NetworkManagerProtocol {
-    static let shared = MockNetworkManager()
+class MockNetworkManager {
+//    static let shared = MockNetworkManager()
     private init() {}
     
     func getData(from serverUrl: String, closure: @escaping (Data?) -> Void) {

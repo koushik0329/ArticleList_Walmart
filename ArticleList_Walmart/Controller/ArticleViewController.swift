@@ -38,9 +38,17 @@ class ArticleViewController: UIViewController, UISearchBarDelegate, UITableViewD
         setupSearchBar()
         setupTableView()
         
-        viewModel.getDataFromServer { [weak self] in
+        viewModel.getDataFromServer { [weak self] errorState in
                 DispatchQueue.main.async {
-                    self?.articleTableView.reloadData()
+                    guard let self = self else { return }
+                                
+//                    self.articleTableView.reloadData()
+                    guard let _ = errorState else {
+                        self.articleTableView.reloadData()
+                        return
+                    }
+                    
+                    self.showAlert(title: "Error", message: self.viewModel.errorMessage)
                 }
             }
     }

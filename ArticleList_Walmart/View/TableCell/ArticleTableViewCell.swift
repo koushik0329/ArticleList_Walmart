@@ -102,17 +102,25 @@ class ArticleTableViewCell: UITableViewCell {
         descriptionLabel.text = article.description
         publishedDateLabel.text = article.publishedDateOnly
         
-        guard let imageUrl = article.urlToImage else {
-                articleImageView.image = UIImage(systemName: "photo") // fallback image
-                return
+        var receivedImageData: Data?
+        NetworkManager.shared.getData(from: article.urlToImage!, closure: { [weak self] fetchedState in
+            guard let self = self else { return }
+            switch fetchedState {
+            case .isLoading, .invalidURL, .errorFetchingData, .noDataFromServer:
+                DispatchQueue.main.async {
+                    self.articleImageView.image = UIImage(systemName: "photo.trianglebadge.exclamationmark.fill")
+                }
+                break
+            case .success(let fetchedData):
+                receivedImageData = fetchedData
+                break
             }
-            
-        NetworkManager.shared.getData(from: imageUrl) { [weak self] data in
-            guard let self = self, let data = data, let image = UIImage(data: data) else { return }
-                
+            // convert imageData into UIImage
             DispatchQueue.main.async {
-                self.articleImageView.image = image
+                guard let receivedImageData = receivedImageData else { return }
+                self.articleImageView.image = UIImage(data: receivedImageData)
             }
-        }
+        })
     }
 }
+

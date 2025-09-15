@@ -8,29 +8,38 @@
 import Foundation
 
 protocol NetworkManagerProtocol {
-    func getData(from serverUrl: String, closure: @escaping (Data?) -> Void)
+    func getData(from serverUrl: String, closure: @escaping (NetworkState) -> Void)
     func parse(data: Data?) -> ArticleList?
 }
 
 // MARK: - Network Manager with parse
 class NetworkManager : NetworkManagerProtocol {
     static let shared = NetworkManager()
+    var state: NetworkState = .isLoading
+    
     init() {}
     
-    func getData(from serverUrl: String, closure: @escaping (Data?) -> Void) {
+    func getData(from serverUrl: String, closure: @escaping (NetworkState) -> Void) {
         guard let serverURL = URL(string: serverUrl) else {
-            print("Invalid URL")
-            closure(nil)
+            state = .invalidURL
+            closure(state)
             return
         }
         
         URLSession.shared.dataTask(with: serverURL) { data, _, error in
-            if let error = error {
-                print("Network error: \(error)")
-                closure(nil)
+            if let _ = error {
+                self.state = .errorFetchingData
+                closure(self.state)
                 return
             }
-            closure(data)
+            
+            guard let data else {
+                self.state = .noDataFromServer
+                closure(self.state)
+                return
+            }
+            self.state = .success(data)
+            closure(self.state)
         }.resume()
     }
     
