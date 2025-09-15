@@ -12,10 +12,12 @@ class ArticleViewController: UIViewController, UISearchBarDelegate, UITableViewD
 //    private let viewModel = ArticleViewModel()
     
     var viewModel: ArticleViewModelProtocol!
+    var articleCoordinatorProtocol: ArticleCoordinatorProtocol!
 
-    init(viewModel: ArticleViewModelProtocol) {
+    init(viewModel: ArticleViewModelProtocol, coordinator: ArticleCoordinatorProtocol? = nil) {
         super.init(nibName: nil, bundle: nil)
         self.viewModel = viewModel
+        self.articleCoordinatorProtocol = coordinator
     }
     
     required init?(coder: NSCoder) {
@@ -25,7 +27,7 @@ class ArticleViewController: UIViewController, UISearchBarDelegate, UITableViewD
 //    private var searchTimer: Timer?
     private var pendingRequestWorkItem: DispatchWorkItem?
     
-    var updateClosure: ((Article?) -> Void?)? = nil
+
     
     var searchBar: UISearchBar!
     var articleTableView : UITableView!
@@ -51,6 +53,8 @@ class ArticleViewController: UIViewController, UISearchBarDelegate, UITableViewD
                     self.showAlert(title: "Error", message: self.viewModel.errorMessage)
                 }
             }
+
+        articleCoordinatorProtocol = ArticleCoordinator(navigationController: navigationController)
     }
     
     func setupSearchBar() {
@@ -107,23 +111,21 @@ class ArticleViewController: UIViewController, UISearchBarDelegate, UITableViewD
     }
     
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        let detailsVC = DetailsViewController()
         
         let selectedArticle = viewModel.getArticle(at: indexPath.row)
-        
-        detailsVC.article = selectedArticle
-        detailsVC.closure = { [weak self] updatedArticle in
+
+        let closure :((Article?) -> Void)? = { [weak self] updatedArticle in
             guard let self = self,
                   let updatedArticle = updatedArticle else { return }
-
+            
             self.viewModel.updateArticle(at: indexPath.row, with: updatedArticle)
-
+            
             DispatchQueue.main.async {
                 self.articleTableView.reloadRows(at: [indexPath], with: .none)
             }
-                            }
+        }
         
-        navigationController?.pushViewController(detailsVC, animated: true)
+        articleCoordinatorProtocol?.showDetailScreen(article: selectedArticle, closure: closure)
     }
 }
 
