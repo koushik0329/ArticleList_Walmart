@@ -103,7 +103,13 @@ class ArticleTableViewCell: UITableViewCell {
         publishedDateLabel.text = article.publishedDateOnly
         
         var receivedImageData: Data?
-        NetworkManager.shared.getData(from: article.urlToImage!, closure: { [weak self] fetchedState in
+        
+        guard let urlString = article.urlToImage else {
+            self.articleImageView.image = UIImage(systemName: "photo.trianglebadge.exclamationmark.fill")
+            return
+        }
+        
+        NetworkManager.shared.getData(from: urlString, closure: { [weak self] fetchedState in
             guard let self = self else { return }
             switch fetchedState {
             case .isLoading, .invalidURL, .errorFetchingData, .noDataFromServer:
@@ -115,7 +121,6 @@ class ArticleTableViewCell: UITableViewCell {
                 receivedImageData = fetchedData
                 break
             }
-            // convert imageData into UIImage
             DispatchQueue.main.async {
                 guard let receivedImageData = receivedImageData else { return }
                 self.articleImageView.image = UIImage(data: receivedImageData)

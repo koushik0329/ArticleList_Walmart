@@ -35,6 +35,9 @@ class ArticleViewModel: ArticleViewModelProtocol {
         networkManager.getData(from: Server.endPoint.rawValue) { [weak self] fetchedState in
             guard let self = self else { return }
             
+            sleep(1)
+            print("Api call", Server.endPoint.rawValue)
+            
             switch fetchedState {
             case .isLoading, .invalidURL, .errorFetchingData, .noDataFromServer:
                 self.errorState = fetchedState

@@ -13,6 +13,9 @@ class ArticleViewController: UIViewController, UISearchBarDelegate, UITableViewD
     
     var viewModel: ArticleViewModelProtocol!
     var articleCoordinatorProtocol: ArticleCoordinatorProtocol!
+    
+    private let refreshControl = UIRefreshControl()
+    private let spinner = UIActivityIndicatorView(style: .large)
 
     init(viewModel: ArticleViewModelProtocol, coordinator: ArticleCoordinatorProtocol? = nil) {
         super.init(nibName: nil, bundle: nil)
@@ -41,18 +44,18 @@ class ArticleViewController: UIViewController, UISearchBarDelegate, UITableViewD
         setupTableView()
         
         viewModel.getDataFromServer { [weak self] errorState in
-                DispatchQueue.main.async {
-                    guard let self = self else { return }
-                                
-//                    self.articleTableView.reloadData()
-                    guard let _ = errorState else {
-                        self.articleTableView.reloadData()
-                        return
-                    }
+            DispatchQueue.main.async {
+                guard let self = self else { return }
                     
-                    self.showAlert(title: "Error", message: self.viewModel.errorMessage)
+                self.spinner.stopAnimating()
+                guard let _ = errorState else {
+                    self.articleTableView.reloadData()
+                    return
                 }
+                    
+                self.showAlert(title: "Error", message: self.viewModel.errorMessage)
             }
+        }
 
         articleCoordinatorProtocol = ArticleCoordinator(navigationController: navigationController)
     }
@@ -81,13 +84,25 @@ class ArticleViewController: UIViewController, UISearchBarDelegate, UITableViewD
         articleTableView.register(ArticleTableViewCell.self, forCellReuseIdentifier: "ArticleCell")
         view.addSubview(articleTableView)
         
+        spinner.translatesAutoresizingMaskIntoConstraints = false
+        view.addSubview(spinner)
+        
         NSLayoutConstraint.activate([
             articleTableView.topAnchor.constraint(equalTo: searchBar.bottomAnchor),
             articleTableView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             articleTableView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-            articleTableView.bottomAnchor.constraint(equalTo: view.bottomAnchor)
+            articleTableView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
+            
+            spinner.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            spinner.centerYAnchor.constraint(equalTo: view.centerYAnchor)
         ])
         
+        refreshControl.attributedTitle = NSAttributedString(string: "")
+        refreshControl.addTarget(self, action: #selector(refreshData), for: .valueChanged)
+        articleTableView.refreshControl = refreshControl
+        
+        spinner.startAnimating()
+//        spinner.hidesWhenStopped = true
     }
     
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
@@ -169,4 +184,24 @@ extension ArticleViewController {
     func searchBarSearchButtonClicked(_ searchBar: UISearchBar) {
         searchBar.resignFirstResponder()
     }
+}
+
+extension ArticleViewController {
+    
+    @objc private func refreshData() {
+        viewModel.getDataFromServer { [weak self] errorState in
+            DispatchQueue.main.async {
+                guard let self = self else { return }
+                self.refreshControl.endRefreshing()  // stop spinner
+                
+                guard let _ = errorState else {
+                    self.articleTableView.reloadData()
+                    return
+                }
+                
+                self.showAlert(title: "Error", message: self.viewModel.errorMessage)
+            }
+        }
+    }
+
 }
