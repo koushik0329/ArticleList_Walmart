@@ -16,6 +16,7 @@ class ArticleViewController: UIViewController, UISearchBarDelegate, UITableViewD
     
     private let refreshControl = UIRefreshControl()
     private let spinner = UIActivityIndicatorView(style: .large)
+    private var pendingRequestWorkItem: DispatchWorkItem?
 
     init(viewModel: ArticleViewModelProtocol, coordinator: ArticleCoordinatorProtocol? = nil) {
         super.init(nibName: nil, bundle: nil)
@@ -27,11 +28,6 @@ class ArticleViewController: UIViewController, UISearchBarDelegate, UITableViewD
         fatalError("init(coder:) has not been implemented")
     }
     
-//    private var searchTimer: Timer?
-    private var pendingRequestWorkItem: DispatchWorkItem?
-    
-
-    
     var searchBar: UISearchBar!
     var articleTableView : UITableView!
     
@@ -40,25 +36,37 @@ class ArticleViewController: UIViewController, UISearchBarDelegate, UITableViewD
         
         view.backgroundColor = .systemBackground
         
+        edgesForExtendedLayout = []
+        navigationController?.navigationBar.isHidden = true
+        
         setupSearchBar()
         setupTableView()
         
         viewModel.getDataFromServer { [weak self] errorState in
             DispatchQueue.main.async {
                 guard let self = self else { return }
-                    
-                self.spinner.stopAnimating()
-                guard let _ = errorState else {
-                    self.articleTableView.reloadData()
-                    return
+        
+                DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+                    self.spinner.stopAnimating()
+                    guard let _ = errorState else {
+                        self.articleTableView.reloadData()
+                        return
+                    }
+                    self.showAlert(title: "Error", message: self.viewModel.errorMessage)
                 }
-                    
-                self.showAlert(title: "Error", message: self.viewModel.errorMessage)
             }
         }
 
-        articleCoordinatorProtocol = ArticleCoordinator(navigationController: navigationController)
+        if articleCoordinatorProtocol == nil {
+            articleCoordinatorProtocol = ArticleCoordinator(navigationController: navigationController)
+        }
     }
+    
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        navigationController?.setNavigationBarHidden(true, animated: true)
+    }
+
     
     func setupSearchBar() {
         searchBar = UISearchBar()
@@ -66,10 +74,12 @@ class ArticleViewController: UIViewController, UISearchBarDelegate, UITableViewD
         searchBar.translatesAutoresizingMaskIntoConstraints = false
         searchBar.delegate = self
         searchBar.showsCancelButton = true
+//        navigationItem.titleView = searchBar
+
         view.addSubview(searchBar)
         
         NSLayoutConstraint.activate([
-            searchBar.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
+            searchBar.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 0),
             searchBar.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 10),
             searchBar.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -10),
             searchBar.heightAnchor.constraint(equalToConstant: 40)
@@ -91,7 +101,7 @@ class ArticleViewController: UIViewController, UISearchBarDelegate, UITableViewD
             articleTableView.topAnchor.constraint(equalTo: searchBar.bottomAnchor),
             articleTableView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             articleTableView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-            articleTableView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
+            articleTableView.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor),
             
             spinner.centerXAnchor.constraint(equalTo: view.centerXAnchor),
             spinner.centerYAnchor.constraint(equalTo: view.centerYAnchor)
@@ -151,27 +161,18 @@ extension ArticleViewController {
     }
     
     func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {
-//        searchTimer?.invalidate()
-//            
-//        searchTimer = Timer.scheduledTimer(withTimeInterval: 0.5, repeats: false) { [weak self] _ in guard let self = self else { return }
-//                
-//        self.viewModel.searchArticles(with: searchText)
-//        self.articleTableView.reloadData()
-//        }
-        
-        // Cancel the currently pending item (if any)
         pendingRequestWorkItem?.cancel()
-                
-        // Wrap the new request in a work item
-        let requestWorkItem = DispatchWorkItem { [weak self] in
-            guard let self = self else { return }
-            self.viewModel.searchArticles(with: searchText)
-            self.articleTableView.reloadData()
-        }
-                
-        // Save the new work item and execute it after a delay (debounce interval)
-        pendingRequestWorkItem = requestWorkItem
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5, execute: requestWorkItem)
+
+                let requestWorkItem = DispatchWorkItem { [weak self] in
+                    guard let self = self else { return }
+                    self.viewModel.searchArticles(with: searchText)
+                    DispatchQueue.main.async {
+                        self.articleTableView.reloadData()
+                    }
+                }
+
+                pendingRequestWorkItem = requestWorkItem
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5, execute: requestWorkItem)
     }
     
     func searchBarCancelButtonClicked(_ searchBar: UISearchBar) {

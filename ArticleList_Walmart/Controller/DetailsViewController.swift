@@ -57,6 +57,12 @@ class DetailsViewController: UIViewController {
         configureDetails()
     }
     
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        navigationController?.setNavigationBarHidden(false, animated: true)
+    }
+
+    
     private func setupUI() {
         view.backgroundColor = .white
         
