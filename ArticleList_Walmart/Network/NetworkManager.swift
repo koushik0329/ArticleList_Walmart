@@ -8,12 +8,13 @@
 import Foundation
 
 protocol NetworkManagerProtocol {
-    func getData(from serverUrl: String, closure: @escaping (NetworkState) -> Void)
-    func parse(data: Data?) -> ArticleList?
+        func getData(from serverUrl: String, closure: @escaping (NetworkState) -> Void)
+        func parse<T: Decodable>(data: Data?, type: T.Type) -> T?
 }
 
+
 // MARK: - Network Manager with parse
-class NetworkManager : NetworkManagerProtocol {
+class NetworkManager: NetworkManagerProtocol {
     static let shared = NetworkManager()
     var state: NetworkState = .isLoading
     
@@ -43,10 +44,10 @@ class NetworkManager : NetworkManagerProtocol {
         }.resume()
     }
     
-    func parse(data: Data?) -> ArticleList? {
+    func parse<T: Decodable>(data: Data?, type: T.Type) -> T? {
         guard let data = data else { return nil }
         do {
-            return try JSONDecoder().decode(ArticleList.self, from: data)
+            return try JSONDecoder().decode(T.self, from: data)
         } catch {
             print("Parsing error: \(error)")
             return nil

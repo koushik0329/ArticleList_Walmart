@@ -42,7 +42,7 @@ class ArticleViewModel: ArticleViewModelProtocol {
                 self.errorState = fetchedState
                 break
             case .success(let fetchedData):
-                if let fetchedList = self.networkManager.parse(data: fetchedData) {
+                if let fetchedList = self.networkManager.parse(data: fetchedData, type: ArticleList.self) {
                     self.articles = fetchedList.articles ?? []
                     self.filteredArticles = self.articles
                 }
