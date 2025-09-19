@@ -22,16 +22,17 @@ final class TabBarController: UITabBarController {
         let articleViewController = ArticleViewController(viewModel: viewModel)
         let articleNavController = UINavigationController(rootViewController: articleViewController)
         articleNavController.tabBarItem = UITabBarItem(
-            title: "DashBoard",
-            image: UIImage(systemName: "house"),
+            title: "Article",
+            image: UIImage(systemName: "newspaper"),
             tag: 0
         )
-
-        let cartViewController = CartViewController()
-        let cartNavController = UINavigationController(rootViewController: cartViewController)
-        cartNavController.tabBarItem = UITabBarItem(
-            title: "Cart",
-            image: UIImage(systemName: "cart"),
+        
+        let countryViewModel = CountryViewModel(networkManager: networkManager)
+        let countryViewController = CountryViewController(countryViewModel: countryViewModel)
+        let countryNavController = UINavigationController(rootViewController: countryViewController)
+        countryNavController.tabBarItem = UITabBarItem(
+            title: "Country",
+            image: UIImage(systemName: "flag"),
             tag: 1
         )
 
@@ -51,7 +52,7 @@ final class TabBarController: UITabBarController {
             tag: 3
         )
 
-        self.viewControllers = [articleNavController, cartNavController, addNavController, profileNavController]
+        self.viewControllers = [articleNavController, countryNavController, addNavController, profileNavController]
 
     }
 }
