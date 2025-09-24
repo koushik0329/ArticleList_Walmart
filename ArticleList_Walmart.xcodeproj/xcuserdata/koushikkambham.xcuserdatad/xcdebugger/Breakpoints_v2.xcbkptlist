@@ -14,8 +14,8 @@
             filePath = "ArticleList_Walmart/Article/Controller/ArticleViewController.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "219"
-            endingLineNumber = "219"
+            startingLineNumber = "221"
+            endingLineNumber = "221"
             landmarkName = "didUpdateArticle(_:at:)"
             landmarkType = "7">
          </BreakpointContent>

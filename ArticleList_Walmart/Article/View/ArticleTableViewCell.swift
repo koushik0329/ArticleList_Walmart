@@ -7,7 +7,13 @@
 
 import UIKit
 
+protocol ArticleTableViewCellDelegate: AnyObject {
+    func didTapDeleteButton(for cell: ArticleTableViewCell)
+}
+
 class ArticleTableViewCell: UITableViewCell {
+    
+    weak var delegate: ArticleTableViewCellDelegate?
     
     let authorLabel: UILabel = {
         let label = UILabel()
@@ -79,6 +85,8 @@ class ArticleTableViewCell: UITableViewCell {
         contentView.addSubview(squareIcon)
         contentView.addSubview(deleteButton)
         
+        deleteButton.addTarget(self, action: #selector(deleteButtonTapped), for: .touchUpInside)
+        
         NSLayoutConstraint.activate([
             authorLabel.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 10),
             authorLabel.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 16),
@@ -143,6 +151,10 @@ class ArticleTableViewCell: UITableViewCell {
                 self.articleImageView.image = UIImage(data: receivedImageData)
             }
         })
+    }
+    
+    @objc private func deleteButtonTapped() {
+        delegate?.didTapDeleteButton(for: self)
     }
 }
 

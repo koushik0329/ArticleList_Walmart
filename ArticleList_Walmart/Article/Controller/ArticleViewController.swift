@@ -124,6 +124,8 @@ class ArticleViewController: UIViewController, UISearchBarDelegate, UITableViewD
             return UITableViewCell()
         }
         
+        cell.delegate = self
+        
         if let article = viewModel.getArticle(at: indexPath.row) {
                 cell.configure(with: article)
         }
@@ -227,3 +229,12 @@ extension ArticleViewController: DetailsElementDelegate {
     }
 }
 
+extension ArticleViewController: ArticleTableViewCellDelegate {
+    func didTapDeleteButton(for cell: ArticleTableViewCell) {
+        guard let indexPath = articleTableView.indexPath(for: cell) else { return }
+       
+        viewModel.deleteArticle(at: indexPath.row)
+                
+        articleTableView.deleteRows(at: [indexPath], with: .fade)
+    }
+}

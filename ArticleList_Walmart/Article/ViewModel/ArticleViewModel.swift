@@ -15,6 +15,7 @@ protocol ArticleViewModelProtocol {
     func searchArticles(with: String)
     func resetSearch()
     func updateArticle(at index: Int, with updatedArticle: Article)
+    func deleteArticle(at index: Int)
 }
 
 class ArticleViewModel: ArticleViewModelProtocol {
@@ -99,6 +100,16 @@ class ArticleViewModel: ArticleViewModelProtocol {
         
         if !filteredArticles.isEmpty && index < filteredArticles.count {
             filteredArticles[index] = updatedArticle
+        }
+    }
+    
+    func deleteArticle(at index: Int) {
+        if index < articles.count {
+            articles.remove(at: index)
+        }
+        
+        if !filteredArticles.isEmpty && index < filteredArticles.count {
+            filteredArticles.remove(at: index)
         }
     }
 }
