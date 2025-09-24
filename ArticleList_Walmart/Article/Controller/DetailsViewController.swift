@@ -7,7 +7,15 @@
 
 import UIKit
 
+protocol DetailsElementDelegate: AnyObject {
+    func didUpdateArticle(_ article: Article, at indexPath: IndexPath)
+}
+
 class DetailsViewController: UIViewController {
+    
+    weak var delegate: DetailsElementDelegate?
+    var article: Article?
+    var indexPath: IndexPath?
     
     private let commentTextField: UITextField = {
         let commentTextField = UITextField()
@@ -47,8 +55,7 @@ class DetailsViewController: UIViewController {
         return articleImageView
     }()
         
-    var article: Article?
-    var closure: ((Article?) -> Void)?
+//    var closure: ((Article?) -> Void)?
         
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -109,6 +116,7 @@ class DetailsViewController: UIViewController {
     private func configureDetails() {
         authorTextField.text = article?.author
         descriptionLabel.text = article?.description
+        commentTextField.text = article?.comment
         
 //        if let imageUrlString = article?.urlToImage, let imageUrl = URL(string: imageUrlString) {
 //            NetworkManager.shared.getData(from: imageUrl.absoluteString) { [weak self] data in
@@ -142,13 +150,17 @@ class DetailsViewController: UIViewController {
 
     @objc private func backToPreviousScreen() {
         article?.comment =  commentTextField.text!
-        closure?(article)
+        article?.author = authorTextField.text!
+        delegate?.didUpdateArticle(article!, at: indexPath!)
+//        closure?(article)
         navigationController?.popViewController(animated: true)
     }
     
     @objc private func saveAction() {
-        article?.author = authorTextField.text ?? ""
-        closure?(article)
+        article?.comment =  commentTextField.text!
+        article?.author = authorTextField.text!
+        delegate?.didUpdateArticle(article!, at: indexPath!)
+//        closure?(article)
         navigationController?.popViewController(animated: true)
     }
 }

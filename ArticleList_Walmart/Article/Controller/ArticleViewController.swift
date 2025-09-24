@@ -79,7 +79,7 @@ class ArticleViewController: UIViewController, UISearchBarDelegate, UITableViewD
         view.addSubview(searchBar)
         
         NSLayoutConstraint.activate([
-            searchBar.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 0),
+            searchBar.topAnchor.constraint(equalTo: view.topAnchor, constant: 60),
             searchBar.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 10),
             searchBar.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -10),
             searchBar.heightAnchor.constraint(equalToConstant: 40)
@@ -139,18 +139,25 @@ class ArticleViewController: UIViewController, UISearchBarDelegate, UITableViewD
         
         let selectedArticle = viewModel.getArticle(at: indexPath.row)
 
-        let closure :((Article?) -> Void)? = { [weak self] updatedArticle in
-            guard let self = self,
-                  let updatedArticle = updatedArticle else { return }
-            
-            self.viewModel.updateArticle(at: indexPath.row, with: updatedArticle)
-            
-            DispatchQueue.main.async {
-                self.articleTableView.reloadRows(at: [indexPath], with: .none)
-            }
-        }
+//        let closure :((Article?) -> Void)? = { [weak self] updatedArticle in
+//            guard let self = self,
+//                  let updatedArticle = updatedArticle else { return }
+//            
+//            self.viewModel.updateArticle(at: indexPath.row, with: updatedArticle)
+//            
+//            DispatchQueue.main.async {
+//                self.articleTableView.reloadRows(at: [indexPath], with: .none)
+//            }
+//        }
+//        
+//        articleCoordinatorProtocol?.showDetailScreen(article: selectedArticle, closure: closure)
         
-        articleCoordinatorProtocol?.showDetailScreen(article: selectedArticle, closure: closure)
+        let detailsVC = DetailsViewController()
+        detailsVC.article = selectedArticle
+        detailsVC.indexPath = indexPath
+        detailsVC.delegate = self
+            
+        navigationController?.pushViewController(detailsVC, animated: true)
     }
 }
 
@@ -206,3 +213,17 @@ extension ArticleViewController {
     }
 
 }
+
+extension ArticleViewController: DetailsElementDelegate {
+    func didUpdateArticle(_ article: Article, at indexPath: IndexPath) {
+        viewModel.updateArticle(at: indexPath.row, with: article)
+        
+        print(article.author)
+        print(article.comment)
+        
+        DispatchQueue.main.async {
+            self.articleTableView.reloadRows(at: [indexPath], with: .none)
+        }
+    }
+}
+

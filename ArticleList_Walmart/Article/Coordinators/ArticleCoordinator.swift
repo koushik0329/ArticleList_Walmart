@@ -9,7 +9,7 @@
 import UIKit
 
 protocol ArticleCoordinatorProtocol {
-    func showDetailScreen(article : Article?, closure: ((Article?) -> Void)?)
+    func showDetailScreen(article : Article?)
 }
 
 final class ArticleCoordinator: ArticleCoordinatorProtocol {
@@ -20,11 +20,11 @@ final class ArticleCoordinator: ArticleCoordinatorProtocol {
         self.navigationController = navigationController
     }
     
-    func showDetailScreen(article : Article?, closure: ((Article?) -> Void)?) {
+    func showDetailScreen(article : Article?) {
         guard let navigationController = navigationController else { return }
         let detailsVC = DetailsViewController()
         detailsVC.article = article
-        detailsVC.closure = closure
+//        detailsVC.closure = closure
         navigationController.pushViewController(detailsVC, animated: true)
     }
 }

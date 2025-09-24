@@ -36,7 +36,7 @@ final class TabBarController: UITabBarController {
             tag: 1
         )
 
-        let addProductViewController = AddProductViewController()
+        let addProductViewController = EmpViewController(viewModel : EmpViewModel())
         let addNavController = UINavigationController(rootViewController: addProductViewController)
         addNavController.tabBarItem = UITabBarItem(
             title: "Add",

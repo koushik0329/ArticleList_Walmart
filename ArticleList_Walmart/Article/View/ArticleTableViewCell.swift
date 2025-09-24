@@ -51,6 +51,15 @@ class ArticleTableViewCell: UITableViewCell {
         return imageView
     }()
     
+    private let deleteButton: UIButton = {
+        let button = UIButton(type: .system)
+        button.setTitle("Delete", for: .normal)
+        button.titleLabel?.font = .systemFont(ofSize: 14, weight: .medium)
+        button.setTitleColor(.systemRed, for: .normal)
+        button.translatesAutoresizingMaskIntoConstraints = false
+        return button
+    }()
+    
     // MARK: Init
     override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
         super.init(style: style, reuseIdentifier: reuseIdentifier)
@@ -68,6 +77,7 @@ class ArticleTableViewCell: UITableViewCell {
         contentView.addSubview(articleImageView)
         contentView.addSubview(publishedDateLabel)
         contentView.addSubview(squareIcon)
+        contentView.addSubview(deleteButton)
         
         NSLayoutConstraint.activate([
             authorLabel.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 10),
@@ -78,20 +88,27 @@ class ArticleTableViewCell: UITableViewCell {
             descriptionLabel.leadingAnchor.constraint(equalTo: authorLabel.leadingAnchor),
             descriptionLabel.trailingAnchor.constraint(equalTo: articleImageView.leadingAnchor, constant: -8),
             
-            articleImageView.centerYAnchor.constraint(equalTo: contentView.centerYAnchor),
+            articleImageView.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 10),
             articleImageView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -16),
             articleImageView.heightAnchor.constraint(equalToConstant: 90),
             articleImageView.widthAnchor.constraint(equalToConstant: 90),
+  
+            deleteButton.topAnchor.constraint(equalTo: articleImageView.bottomAnchor, constant: 4),
+            deleteButton.centerXAnchor.constraint(equalTo: articleImageView.centerXAnchor),
+            deleteButton.widthAnchor.constraint(equalToConstant: 60),
+            deleteButton.heightAnchor.constraint(equalToConstant: 25),
             
             squareIcon.topAnchor.constraint(equalTo: descriptionLabel.bottomAnchor, constant: 8),
             squareIcon.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 16),
-            squareIcon.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -8),
+            squareIcon.bottomAnchor.constraint(lessThanOrEqualTo: contentView.bottomAnchor, constant: -8),
             squareIcon.heightAnchor.constraint(equalToConstant: 16),
             squareIcon.widthAnchor.constraint(equalToConstant: 16),
             
             publishedDateLabel.centerYAnchor.constraint(equalTo: squareIcon.centerYAnchor),
             publishedDateLabel.leadingAnchor.constraint(equalTo: squareIcon.trailingAnchor, constant: 8),
-            publishedDateLabel.trailingAnchor.constraint(equalTo: articleImageView.leadingAnchor, constant: -8)
+            publishedDateLabel.trailingAnchor.constraint(equalTo: articleImageView.leadingAnchor, constant: -8),
+
+            contentView.bottomAnchor.constraint(greaterThanOrEqualTo: deleteButton.bottomAnchor, constant: 8)
         ])
     }
     
