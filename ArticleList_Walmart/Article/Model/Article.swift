@@ -12,7 +12,16 @@ struct ArticleList : Decodable {
 }
 
 struct Article: Decodable {
-    var author: String?
+    
+    var author: String? {
+        willSet {
+            print("willSet: author will change from \(author ?? "nil") to \(newValue ?? "nil")")
+        }
+        didSet {
+            print("didSet: author changed from \(oldValue ?? "nil") to \(author ?? "nil")")
+        }
+    }
+    
     var comment: String?
     var title: String?
     let description: String?

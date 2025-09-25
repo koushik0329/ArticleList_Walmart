@@ -7,6 +7,37 @@
 
 import Foundation
 
+@propertyWrapper
+struct Searchable<T> {
+    private var items: [T] = []
+    private(set) var filteredItems: [T] = []
+    private var filter: (T, String) -> Bool
+    
+    var wrappedValue: [T] {
+        get { filteredItems }
+        set {
+            items = newValue
+            filteredItems = newValue
+        }
+    }
+    
+    init(filter: @escaping (T, String) -> Bool) {
+        self.filter = filter
+    }
+    
+    mutating func search(_ query: String) {
+        if query.isEmpty {
+            filteredItems = items
+        } else {
+            filteredItems = items.filter { filter($0, query) }
+        }
+    }
+    
+    mutating func reset() {
+        filteredItems = items
+    }
+}
+
 protocol ArticleViewModelProtocol {
     func getDataFromServer(closure: @escaping ((NetworkState?) -> Void))
     func getArticleCount() -> Int
@@ -19,9 +50,15 @@ protocol ArticleViewModelProtocol {
 }
 
 class ArticleViewModel: ArticleViewModelProtocol {
-    var articles: [Article] = []
-    var filteredArticles: [Article] = []
-    var isSearching: Bool = false
+    
+    @Searchable<Article>(filter: { article, query in
+        (article.author?.lowercased().contains(query.lowercased()) ?? false) ||
+        (article.description?.lowercased().contains(query.lowercased()) ?? false)
+    })
+    
+    var articles: [Article]
+//    var filteredArticles: [Article] = []
+//    var isSearching: Bool = false
     
     var errorState: NetworkState?
     
@@ -45,7 +82,7 @@ class ArticleViewModel: ArticleViewModelProtocol {
             case .success(let fetchedData):
                 if let fetchedList = self.networkManager.parse(data: fetchedData, type: ArticleList.self) {
                     self.articles = fetchedList.articles ?? []
-                    self.filteredArticles = self.articles
+//                    self.filteredArticles = self.articles
                 }
                 else {
                     self.errorState = .noDataFromServer
@@ -67,30 +104,20 @@ class ArticleViewModel: ArticleViewModelProtocol {
     }
 
     func getArticleCount() -> Int {
-        return filteredArticles.count
+        return articles.count
     }
 
     func getArticle(at index: Int) -> Article? {
-        guard index < filteredArticles.count else { return nil }
-        return filteredArticles[index]
+        guard index < articles.count else { return nil }
+        return articles[index]
     }
 
     func searchArticles(with query: String) {
-        if query.isEmpty {
-            filteredArticles = articles
-            isSearching = false
-        } else {
-            filteredArticles = articles.filter { article in
-                (article.author?.lowercased().contains(query.lowercased()) ?? false) ||
-                (article.description?.lowercased().contains(query.lowercased()) ?? false)
-            }
-            isSearching = true
-        }
+        _articles.search(query)
     }
 
     func resetSearch() {
-        filteredArticles = articles
-        isSearching = false
+        _articles.reset()
     }
     
     func updateArticle(at index: Int, with updatedArticle: Article) {
@@ -98,9 +125,9 @@ class ArticleViewModel: ArticleViewModelProtocol {
             articles[index] = updatedArticle
         }
         
-        if !filteredArticles.isEmpty && index < filteredArticles.count {
-            filteredArticles[index] = updatedArticle
-        }
+//        if !filteredArticles.isEmpty && index < filteredArticles.count {
+//            filteredArticles[index] = updatedArticle
+//        }
     }
     
     func deleteArticle(at index: Int) {
@@ -108,9 +135,9 @@ class ArticleViewModel: ArticleViewModelProtocol {
             articles.remove(at: index)
         }
         
-        if !filteredArticles.isEmpty && index < filteredArticles.count {
-            filteredArticles.remove(at: index)
-        }
+//        if !filteredArticles.isEmpty && index < filteredArticles.count {
+//            filteredArticles.remove(at: index)
+//        }
     }
 }
 
