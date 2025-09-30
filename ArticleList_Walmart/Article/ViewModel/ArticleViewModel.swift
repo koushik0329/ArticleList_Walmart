@@ -21,6 +21,10 @@ struct Searchable<T> {
         }
     }
     
+    var projectedValue: Searchable<T> {
+        get { self }
+    }
+    
     init(filter: @escaping (T, String) -> Bool) {
         self.filter = filter
     }
@@ -67,6 +71,7 @@ class ArticleViewModel: ArticleViewModelProtocol {
 
     init(networkManager: NetworkManagerProtocol) {
         self.networkManager = networkManager
+        self.articles = []
     }
 
     func getDataFromServer(closure: @escaping (NetworkState?) -> Void) {

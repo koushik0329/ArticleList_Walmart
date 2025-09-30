@@ -14,7 +14,7 @@ final class ArticleList_WalmartTests: XCTestCase {
 
     override func setUpWithError() throws {
         articleViewModel = MockArticleViewModel()
-        articleViewModel.getDataFromServer(closure: {})
+        articleViewModel.getDataFromServer(closure: {_ in })
         
         mockNetworkManager = MockNetworkManager.shared
     }

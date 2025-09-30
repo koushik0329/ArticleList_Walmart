@@ -36,6 +36,7 @@ class MockArticleViewModel: ArticleViewModelProtocol {
                     urlToImage: "mock.png",
                     publishedAt: "2025-09-11")
         ]
+        visibleList = articleList
         closure()
     }
     
@@ -53,6 +54,15 @@ class MockArticleViewModel: ArticleViewModelProtocol {
     func updateArticle(at index: Int, with updatedArticle: Article) {
         if index < articleList.count {
             articleList[index] = updatedArticle
+            visibleList[index] = updatedArticle
         }
     }
+    
+    func deleteArticle(at index: Int) {
+        guard index < articleList.count else { return }
+            articleList.remove(at: index)
+            visibleList.remove(at: index)
+    }
+    
+    var errorMessage: String { "" }
 }

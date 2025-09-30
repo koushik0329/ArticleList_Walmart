@@ -35,6 +35,7 @@ class ArticleViewController: UIViewController, UISearchBarDelegate, UITableViewD
         super.viewDidLoad()
         
         view.backgroundColor = .systemBackground
+//        overrideUserInterfaceStyle = .dark
         
         edgesForExtendedLayout = []
         navigationController?.navigationBar.isHidden = true
