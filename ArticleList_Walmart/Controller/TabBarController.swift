@@ -17,7 +17,8 @@ final class TabBarController: UITabBarController {
     
     func setupTabBar() {
         let networkManager = NetworkManager.shared
-        let viewModel = ArticleViewModel(networkManager: networkManager)
+        let serviceManager = ServiceManager.shared
+        let viewModel = ArticleViewModel(serviceManager: serviceManager)
 
         let articleViewController = ArticleViewController(viewModel: viewModel)
         let articleNavController = UINavigationController(rootViewController: articleViewController)

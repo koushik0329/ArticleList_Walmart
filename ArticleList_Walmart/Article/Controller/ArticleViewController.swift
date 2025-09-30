@@ -43,20 +43,22 @@ class ArticleViewController: UIViewController, UISearchBarDelegate, UITableViewD
         setupSearchBar()
         setupTableView()
         
-        viewModel.getDataFromServer { [weak self] errorState in
-            DispatchQueue.main.async {
-                guard let self = self else { return }
-        
-                DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
-                    self.spinner.stopAnimating()
-                    guard let _ = errorState else {
-                        self.articleTableView.reloadData()
-                        return
-                    }
+        Task { [weak self] in
+            guard let self = self else { return }
+            
+            await self.viewModel.getDataFromServer()
+            
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+                self.spinner.stopAnimating()
+                
+                if self.viewModel.errorMessage.isEmpty {
+                    self.articleTableView.reloadData()
+                } else {
                     self.showAlert(title: "Error", message: self.viewModel.errorMessage)
                 }
             }
         }
+
 
         if articleCoordinatorProtocol == nil {
             articleCoordinatorProtocol = ArticleCoordinator(navigationController: navigationController)
@@ -200,29 +202,31 @@ extension ArticleViewController {
 extension ArticleViewController {
     
     @objc private func refreshData() {
-        viewModel.getDataFromServer { [weak self] errorState in
+        Task { [weak self] in
+            guard let self = self else { return }
+            
+            await self.viewModel.getDataFromServer()
+            
             DispatchQueue.main.async {
-                guard let self = self else { return }
-                self.refreshControl.endRefreshing()  // stop spinner
+                self.refreshControl.endRefreshing()
                 
-                guard let _ = errorState else {
+                if self.viewModel.errorMessage.isEmpty {
                     self.articleTableView.reloadData()
-                    return
+                } else {
+                    self.showAlert(title: "Error", message: self.viewModel.errorMessage)
                 }
-                
-                self.showAlert(title: "Error", message: self.viewModel.errorMessage)
             }
         }
     }
-
 }
+
 
 extension ArticleViewController: DetailsElementDelegate {
     func didUpdateArticle(_ article: Article, at indexPath: IndexPath) {
         viewModel.updateArticle(at: indexPath.row, with: article)
         
-        print(article.author)
-        print(article.comment)
+        print(article.author as Any)
+        print(article.comment as Any)
         
         DispatchQueue.main.async {
             self.articleTableView.reloadRows(at: [indexPath], with: .none)

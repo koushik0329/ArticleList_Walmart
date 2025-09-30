@@ -31,11 +31,11 @@ class CountryViewModel: CountryViewModelProtocol {
             guard let self = self else { return }
             
             switch fetchedState {
-            case .isLoading, .invalidURL, .errorFetchingData, .noDataFromServer:
+            case .isLoading, .invalidURL, .errorFetchingData, .noDataFromServer, .errorFetchingDat(_):
                 self.errorState = fetchedState
                 
             case .success(let fetchedData):
-  
+                
                 if let fetchedCountries = self.networkManager.parse(data: fetchedData, type: [Country].self) {
                     self.countries = fetchedCountries
                     self.filteredCountries = self.countries
@@ -43,6 +43,11 @@ class CountryViewModel: CountryViewModelProtocol {
                 } else {
                     self.errorState = .noDataFromServer
                 }
+                
+            
+            case .invalidResponse(statusCode: let statusCode):
+                print("Status code: \(statusCode)")
+                self.errorState = fetchedState
             }
                 
             closure(self.errorState)

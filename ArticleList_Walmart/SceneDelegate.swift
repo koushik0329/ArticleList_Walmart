@@ -21,7 +21,9 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
             window = UIWindow(windowScene: windowScene)
             
         let networkManager = NetworkManager.shared
-        let _ = ArticleViewModel(networkManager: networkManager)
+        let serviceManager = ServiceManager.shared
+        
+        let _ = ArticleViewModel(serviceManager: serviceManager)
 
         let articleViewController = TabBarController()
         let navigationController = UINavigationController(rootViewController: articleViewController)

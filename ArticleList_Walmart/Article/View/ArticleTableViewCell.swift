@@ -127,30 +127,25 @@ class ArticleTableViewCell: UITableViewCell {
         descriptionLabel.text = article.description
         publishedDateLabel.text = article.publishedDateOnly
         
-        var receivedImageData: Data?
+//        var receivedImageData: Data?
         
         guard let urlString = article.urlToImage else {
             self.articleImageView.image = UIImage(systemName: "photo.trianglebadge.exclamationmark.fill")
             return
         }
         
-        NetworkManager.shared.getData(from: urlString, closure: { [weak self] fetchedState in
-            guard let self = self else { return }
-            switch fetchedState {
-            case .isLoading, .invalidURL, .errorFetchingData, .noDataFromServer:
-                DispatchQueue.main.async {
+        Task {
+            do {
+                let data: Data = try await ServiceManager.shared.getData(from: urlString, type: Data.self)
+                if let image = UIImage(data: data) {
+                    self.articleImageView.image = image
+                } else {
                     self.articleImageView.image = UIImage(systemName: "photo.trianglebadge.exclamationmark.fill")
                 }
-                break
-            case .success(let fetchedData):
-                receivedImageData = fetchedData
-                break
+            } catch {
+                self.articleImageView.image = UIImage(systemName: "photo.trianglebadge.exclamationmark.fill")
             }
-            DispatchQueue.main.async {
-                guard let receivedImageData = receivedImageData else { return }
-                self.articleImageView.image = UIImage(data: receivedImageData)
-            }
-        })
+        }
     }
     
     @objc private func deleteButtonTapped() {
