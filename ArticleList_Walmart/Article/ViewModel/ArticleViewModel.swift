@@ -43,7 +43,7 @@ struct Searchable<T> {
 }
 
 protocol ArticleViewModelProtocol {
-    func getDataFromServer(closure: @escaping ((NetworkState?) -> Void))
+    func getDataFromServer() async -> NetworkState?
     func getArticleCount() -> Int
     func getArticle(at index: Int) -> Article?
     var errorMessage: String { get }
@@ -61,51 +61,32 @@ class ArticleViewModel: ArticleViewModelProtocol {
     })
     
     var articles: [Article]
-//    var filteredArticles: [Article] = []
-//    var isSearching: Bool = false
     
     var errorState: NetworkState?
     
-//    var networkManager = NetworkManager.shared
     private let networkManager: NetworkManagerProtocol
 
     init(networkManager: NetworkManagerProtocol) {
         self.networkManager = networkManager
         self.articles = []
     }
-
-    func getDataFromServer(closure: @escaping (NetworkState?) -> Void) {
-        networkManager.getData(from: Server.endPoint.rawValue) { [weak self] fetchedState in
-            guard let self = self else { return }
-            
-//            print("Api call", Server.endPoint.rawValue)
-            
-            switch fetchedState {
-            case .isLoading, .invalidURL, .errorFetchingData, .noDataFromServer:
-                self.errorState = fetchedState
-                break
-            case .success(let fetchedData):
-                if let fetchedList = self.networkManager.parse(data: fetchedData, type: ArticleList.self) {
-                    self.articles = fetchedList.articles ?? []
-//                    self.filteredArticles = self.articles
-                }
-                else {
-                    self.errorState = .noDataFromServer
-                }
+    
+    @MainActor
+    func getDataFromServer() async -> NetworkState? {
+        let fetchedState = await networkManager.getData(from: Server.endPoint.rawValue)
+        
+        switch fetchedState {
+        case .isLoading, .invalidURL, .errorFetchingData, .noDataFromServer:
+            errorState = fetchedState
+        case .success(let fetchedData):
+            if let fetchedList = self.networkManager.parse(data: fetchedData, type: ArticleList.self) {
+                articles = fetchedList.articles ?? []
             }
-            
-            DispatchQueue.main.async {
-                closure(self.errorState)
+            else {
+                errorState = .noDataFromServer
             }
-            
-//            let fetchedList = self.networkManager.parse(data: data)
-//            self.articles = fetchedList?.articles ?? []
-//            self.filteredArticles = self.articles
-            
-//            DispatchQueue.main.async {
-//                closure(self.errorState)
-//            }
         }
+        return self.errorState
     }
 
     func getArticleCount() -> Int {
@@ -130,19 +111,13 @@ class ArticleViewModel: ArticleViewModelProtocol {
             articles[index] = updatedArticle
         }
         
-//        if !filteredArticles.isEmpty && index < filteredArticles.count {
-//            filteredArticles[index] = updatedArticle
-//        }
     }
     
     func deleteArticle(at index: Int) {
         if index < articles.count {
             articles.remove(at: index)
         }
-        
-//        if !filteredArticles.isEmpty && index < filteredArticles.count {
-//            filteredArticles.remove(at: index)
-//        }
+
     }
 }
 

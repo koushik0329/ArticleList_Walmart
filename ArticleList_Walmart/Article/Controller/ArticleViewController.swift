@@ -9,8 +9,6 @@ import UIKit
 
 class ArticleViewController: UIViewController, UISearchBarDelegate, UITableViewDelegate, UITableViewDataSource {
     
-//    private let viewModel = ArticleViewModel()
-    
     var viewModel: ArticleViewModelProtocol!
     var articleCoordinatorProtocol: ArticleCoordinatorProtocol!
     
@@ -43,21 +41,8 @@ class ArticleViewController: UIViewController, UISearchBarDelegate, UITableViewD
         setupSearchBar()
         setupTableView()
         
-        viewModel.getDataFromServer { [weak self] errorState in
-            DispatchQueue.main.async {
-                guard let self = self else { return }
+        fetchArticles(showLoader: true)
         
-                DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
-                    self.spinner.stopAnimating()
-                    guard let _ = errorState else {
-                        self.articleTableView.reloadData()
-                        return
-                    }
-                    self.showAlert(title: "Error", message: self.viewModel.errorMessage)
-                }
-            }
-        }
-
         if articleCoordinatorProtocol == nil {
             articleCoordinatorProtocol = ArticleCoordinator(navigationController: navigationController)
         }
@@ -75,7 +60,6 @@ class ArticleViewController: UIViewController, UISearchBarDelegate, UITableViewD
         searchBar.translatesAutoresizingMaskIntoConstraints = false
         searchBar.delegate = self
         searchBar.showsCancelButton = true
-//        navigationItem.titleView = searchBar
 
         view.addSubview(searchBar)
         
@@ -141,19 +125,6 @@ class ArticleViewController: UIViewController, UISearchBarDelegate, UITableViewD
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         
         let selectedArticle = viewModel.getArticle(at: indexPath.row)
-
-//        let closure :((Article?) -> Void)? = { [weak self] updatedArticle in
-//            guard let self = self,
-//                  let updatedArticle = updatedArticle else { return }
-//            
-//            self.viewModel.updateArticle(at: indexPath.row, with: updatedArticle)
-//            
-//            DispatchQueue.main.async {
-//                self.articleTableView.reloadRows(at: [indexPath], with: .none)
-//            }
-//        }
-//        
-//        articleCoordinatorProtocol?.showDetailScreen(article: selectedArticle, closure: closure)
         
         let detailsVC = DetailsViewController()
         detailsVC.article = selectedArticle
@@ -198,31 +169,17 @@ extension ArticleViewController {
 }
 
 extension ArticleViewController {
-    
     @objc private func refreshData() {
-        viewModel.getDataFromServer { [weak self] errorState in
-            DispatchQueue.main.async {
-                guard let self = self else { return }
-                self.refreshControl.endRefreshing()  // stop spinner
-                
-                guard let _ = errorState else {
-                    self.articleTableView.reloadData()
-                    return
-                }
-                
-                self.showAlert(title: "Error", message: self.viewModel.errorMessage)
-            }
-        }
+        fetchArticles(showLoader: false, isRefreshing: true)
     }
-
 }
 
 extension ArticleViewController: DetailsElementDelegate {
     func didUpdateArticle(_ article: Article, at indexPath: IndexPath) {
         viewModel.updateArticle(at: indexPath.row, with: article)
         
-        print(article.author)
-        print(article.comment)
+        print(article.author ?? "default")
+        print(article.comment ?? "default comment")
         
         DispatchQueue.main.async {
             self.articleTableView.reloadRows(at: [indexPath], with: .none)
@@ -237,5 +194,32 @@ extension ArticleViewController: ArticleTableViewCellDelegate {
         viewModel.deleteArticle(at: indexPath.row)
                 
         articleTableView.deleteRows(at: [indexPath], with: .fade)
+    }
+}
+
+extension ArticleViewController {
+    func fetchArticles(showLoader: Bool = true, isRefreshing: Bool = false) {
+        if showLoader {
+            spinner.startAnimating()
+        }
+        
+        Task {
+            let errorState = await viewModel.getDataFromServer()
+            try? await Task.sleep(nanoseconds: 1_000_000_000)
+            
+            if showLoader {
+                spinner.stopAnimating()
+            }
+            
+            if isRefreshing {
+                refreshControl.endRefreshing()
+            }
+            
+            if errorState == nil {
+                articleTableView.reloadData()
+            } else {
+                showAlert(title: "Error", message: viewModel.errorMessage)
+            }
+        }
     }
 }
