@@ -1,215 +1,95 @@
 
-# ArticleList Walmart
 
-A modern iOS news application built with Swift and UIKit, showcasing clean architecture principles and protocol-oriented programming.
+# 📰 ArticleList Walmart
 
-![iOS](https://img.shields.io/badge/iOS-18.6+-blue.svg)
-![Swift](https://img.shields.io/badge/Swift-5.0+-orange.svg)
-![Xcode](https://img.shields.io/badge/Xcode-15.0+-blue.svg)
-![License](https://img.shields.io/badge/License-MIT-green.svg)
+A modern iOS news application built with **Swift** and **UIKit**, showcasing **Clean Architecture** and **Protocol-Oriented Programming**.  
+This project demonstrates working with APIs using a **generic `NetworkManager`**, data persistence via **UserDefaults**, and a smooth user experience with search and delete actions.  
+The app is structured using **MVVMC (Model–View–ViewModel–Coordinator)** for clear separation of concerns and navigation management.
 
-## 📱 Screenshots
+---
 
-<img width="389" height="834" alt="image" src="https://github.com/user-attachments/assets/b29c6aed-32e9-4c7e-8282-04bfa05f01fc" />
+## 🚀 Features
 
-*News articles displayed with search functionality and detailed views*
+- 🔹 **Login Screen**  
+  - Simple login flow with user details stored in **UserDefaults**  
+  - Users don’t need to log in every time  
 
-## ✨ Features
+- 🔹 **Articles List**  
+  - Fetches news articles from a server endpoint using `NetworkManager`  
+  - Supports **search functionality** with UISearchController  
+  - Allows deleting articles with swipe actions  
 
-- **📰 News Article Feed**: Browse through a curated list of news articles
-- **🔍 Real-time Search**: Search articles by author or description
-- **📖 Detailed Article View**: View full article details with images
-- **✏️ Edit Functionality**: Modify author names and add comments
-- **🖼️ Image Loading**: Asynchronous image loading with fallback support
-- **📱 Responsive UI**: Optimized for various iOS device sizes
-- **🏗️ Clean Architecture**: Protocol-oriented programming with MVVMC pattern
+- 🔹 **Networking**  
+  - `NetworkManager` handles API calls and JSON parsing  
+  - Uses **async/await** with `URLSession`  
+  - Generic `parse` method for decoding `Decodable` models  
 
-## 🛠️ Technical Architecture
+---
 
-### Design Patterns
-- **MVVMC (Model-View-ViewModel-Coordinator)**: Clean separation of concerns with navigation handled by Coordinators
-- **Protocol-Oriented Programming**: Dependency injection and testability
-- **Delegation Pattern**: Communication between view controllers
-- **Singleton Pattern**: ServiceManager for API calls
+## 🏛 Architecture – MVVMC
 
-### ServiceManager (Generic + Async/Await)
+This project follows the **MVVMC (Model–View–ViewModel–Coordinator)** pattern:  
+
+- **Model** → Defines the data and business logic.  
+- **View** → Handles only UI and rendering.  
+- **ViewModel** → Exposes data/state to the view and communicates with the model.  
+- **Coordinator** → Manages navigation flow, ensuring view controllers remain lightweight and independent.  
+
+👉 This structure makes the app **modular, testable, and scalable**, ideal for real-world production apps.  
+
+---
+
+## 📡 Network Layer
+
 ```swift
-import Foundation
-
-protocol ServiceManagerProtocol {
-    func getData<T: Decodable>(from serverUrl: String, type: T.Type) async throws -> T
+protocol NetworkManagerProtocol {
+    func getData(from serverUrl: String) async -> NetworkState
+    func parse<T: Decodable>(data: Data?, type: T.Type) -> T?
 }
 
-class ServiceManager: ServiceManagerProtocol {
-    static let shared = ServiceManager()
-
-    func getData<T: Decodable>(from serverUrl: String, type: T.Type) async throws -> T {
-        guard let serverURL = URL(string: serverUrl) else {
-            throw ServiceError.networkState(.invalidURL)
+class NetworkManager: NetworkManagerProtocol {
+    static let shared = NetworkManager()
+    
+    func getData(from serverUrl: String) async -> NetworkState {
+        guard let serverURL = URL(string: serverUrl) else { return .invalidURL }
+        do {
+            let (data, _) = try await URLSession.shared.data(from: serverURL)
+            return .success(data)
+        } catch {
+            return .errorFetchingData
         }
+    }
 
-        let (data, response) = try await URLSession.shared.data(from: serverURL)
-
-        guard let httpResponse = response as? HTTPURLResponse,
-              (200...299).contains(httpResponse.statusCode) else {
-            throw ServiceError.networkState(.invalidResponse(statusCode: (response as? HTTPURLResponse)?.statusCode ?? -1))
-        }
-
-        return try JSONDecoder().decode(T.self, from: data)
+    func parse<T: Decodable>(data: Data?, type: T.Type) -> T? {
+        guard let data = data else { return nil }
+        return try? JSONDecoder().decode(T.self, from: data)
     }
 }
 ````
 
-### ArticleViewModel (Protocol-Based)
+---
 
-```swift
-protocol ArticleViewModelProtocol {
-    func getDataFromServer() async
-    func getArticleCount() -> Int
-    func getArticle(at index: Int) -> Article?
-    func searchArticles(with: String)
-    func resetSearch()
-    func updateArticle(at index: Int, with updatedArticle: Article)
-}
-```
+## 🛠 Tech Stack
 
-### Article Model
-
-```swift
-struct Article: Decodable {
-    var author: String?
-    var comment: String
-    let description: String?
-    let urlToImage: String?
-    let publishedAt: String?
-    
-    var publishedDateOnly: String {
-        // Date formatting logic
-    }
-}
-```
-
-## 🚀 Getting Started
-
-### Prerequisites
-
-* Xcode 15.0+
-* iOS 18.6+
-* Swift 5.0+
-
-### Installation
-
-1. **Clone the repository**
-
-   ```bash
-   git clone https://github.com/yourusername/ArticleList_Walmart.git
-   cd ArticleList_Walmart
-   ```
-
-2. **Open in Xcode**
-
-   ```bash
-   open ArticleList_Walmart.xcodeproj
-   ```
-
-3. **Build and Run**
-
-   * Select your target device/simulator
-   * Press `Cmd + R` to build and run
-
-### Configuration
-
-Update the API endpoint in `Constant.swift`:
-
-```swift
-enum Server: String {
-    case endPoint = "https://your-news-api-endpoint.com/articles"
-}
-```
-
-## 📋 Usage
-
-### Basic Operations
-
-1. **View Articles**: Launch the app to see the latest news articles
-2. **Search**: Use the search bar to filter articles by author or description
-3. **View Details**: Tap on any article to view full details
-4. **Edit Article**: Modify author name or add comments in the detail view
-5. **Save Changes**: Use the save button to persist your modifications
-
-### Search Functionality
-
-* Real-time search as you type
-* Searches both author names and article descriptions
-* Case-insensitive matching
-* Clear search to return to full article list
-
-## 🧪 Testing
-
-The project includes comprehensive testing suites:
-
-### Unit Tests
-
-```bash
-# Run unit tests
-cmd + u
-```
-
-### UI Tests
-
-* Automated UI testing for critical user flows
-* Screen navigation testing
-* Search functionality validation
-
-### Mock Objects
-
-* `MockServiceManager` for testing network calls
-* `MockArticleViewModel` for view controller testing
-
-## 🏗️ Architecture Benefits
-
-### Protocol-Oriented Programming
-
-* **Testability**: Easy dependency injection with protocol mocks
-* **Flexibility**: Swap implementations without changing dependent code
-* **Modularity**: Clean separation between components
-
-### MVVMC Pattern
-
-* **Separation of Concerns**: Clear distinction between UI, navigation, and business logic
-* **Testability**: ViewModels can be unit tested independently
-* **Reusability**: Coordinators and ViewModels can be reused across different flows
-
-## 🔄 Data Flow
-
-1. **Service Manager**: Fetches data from API using async/await
-2. **Model Layer**: Parses JSON into `Article` structs
-3. **ViewModel Layer**: Processes data and manages state
-4. **Coordinator Layer**: Handles navigation between screens
-5. **View Layer**: Displays data and handles user interactions
-
-## 📱 UI Components
-
-### ArticleTableViewCell
-
-* Custom table view cell with image loading
-* Author, description, and publication date display
-* Share icon and proper constraint layout
-
-### DetailsViewController
-
-* Editable author field
-* Comment input field
-* Image display with fallback support
-* Save/Cancel navigation buttons
+* **iOS 18.6+**
+* **Swift 5.0+**
+* **UIKit**
+* **MVVMC Architecture**
+* **Protocol-Oriented Programming**
+* **Clean Architecture**
+* **Async/Await Networking**
+* **UserDefaults for persistence**
 
 ---
 
-⭐ **Star this repository if you found it helpful!**
+## 📸 Screenshots
 
-```
+Login Screen 
 
----
+<img width="432" height="853" alt="image" src="https://github.com/user-attachments/assets/8cdbbc73-4d11-4cce-8623-992c347c405a" />
 
-Do you also want me to **add a code snippet for using `ServiceManager` inside your `ArticleViewModel`** (with `async/await`)? That would make the README more complete for future readers.
-```
+Articles List
+
+<img width="410" height="846" alt="image" src="https://github.com/user-attachments/assets/1d73cd56-620a-48fd-9db9-39280ff30fe8" />
+
+
