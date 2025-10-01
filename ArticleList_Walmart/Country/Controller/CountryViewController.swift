@@ -128,6 +128,7 @@ class CountryViewController: UIViewController, UISearchBarDelegate, UITableViewD
 }
 
 extension CountryViewController {
+    @MainActor
     func fetchCountries(isRefreshing: Bool = false) {
         Task {
             let errorState = await countryViewModel.getCountriesFromServer()

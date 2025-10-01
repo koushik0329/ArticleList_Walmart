@@ -198,6 +198,7 @@ extension ArticleViewController: ArticleTableViewCellDelegate {
 }
 
 extension ArticleViewController {
+    @MainActor
     func fetchArticles(showLoader: Bool = true, isRefreshing: Bool = false) {
         if showLoader {
             spinner.startAnimating()
