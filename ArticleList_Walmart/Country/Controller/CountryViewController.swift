@@ -36,16 +36,7 @@ class CountryViewController: UIViewController, UISearchBarDelegate, UITableViewD
         edgesForExtendedLayout = []
         navigationController?.navigationBar.isHidden = true
         
-        countryViewModel.getCountriesFromServer { [weak self] errorState in
-            DispatchQueue.main.async {
-                guard let self = self else { return }
-        
-                guard let _ = errorState else {
-                    self.countryTableView.reloadData()
-                    return
-                }
-            }
-        }
+        fetchCountries()
     }
     
     override func viewWillAppear(_ animated: Bool) {
@@ -71,7 +62,6 @@ class CountryViewController: UIViewController, UISearchBarDelegate, UITableViewD
         searchBar.translatesAutoresizingMaskIntoConstraints = false
         searchBar.delegate = self
         searchBar.placeholder = "Search by Name or Capital"
-//        searchBar.showsCancelButton = true
         view.addSubview(searchBar)
         
         NSLayoutConstraint.activate([
@@ -88,8 +78,6 @@ class CountryViewController: UIViewController, UISearchBarDelegate, UITableViewD
         countryTableView.delegate = self
         countryTableView.dataSource = self
         countryTableView.register(CountryTableViewCell.self, forCellReuseIdentifier: "countryCell")
-//        countryTableView.rowHeight = UITableView.automaticDimension
-//        countryTableView.estimatedRowHeight = 73
         view.addSubview(countryTableView)
         
         NSLayoutConstraint.activate([
@@ -119,7 +107,7 @@ class CountryViewController: UIViewController, UISearchBarDelegate, UITableViewD
     }
     
     func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
-        73
+        80
     }
     
     func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {
@@ -135,17 +123,25 @@ class CountryViewController: UIViewController, UISearchBarDelegate, UITableViewD
     }
     
     @objc private func refreshData() {
-        countryViewModel.getCountriesFromServer { [weak self] errorState in
-            DispatchQueue.main.async {
-                guard let self = self else { return }
-                self.refreshControl.endRefreshing()  // stop spinner
-                
-                guard let _ = errorState else {
-                    self.countryTableView.reloadData()
-                    return
-                }
-                
-                self.showAlert(title: "Error", message: self.countryViewModel.errorMessage)
+        fetchCountries(isRefreshing: true)
+    }
+}
+
+extension CountryViewController {
+    @MainActor
+    func fetchCountries(isRefreshing: Bool = false) {
+        Task {
+            let errorState = await countryViewModel.getCountriesFromServer()
+            
+            if !isRefreshing {
+                refreshControl.endRefreshing()
+            }
+            
+            if errorState == nil {
+                countryTableView.reloadData()
+            }
+            else {
+                showAlert(title: "Error", message: countryViewModel.errorMessage)
             }
         }
     }

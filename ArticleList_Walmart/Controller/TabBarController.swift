@@ -17,8 +17,7 @@ final class TabBarController: UITabBarController {
     
     func setupTabBar() {
         let networkManager = NetworkManager.shared
-        let serviceManager = ServiceManager.shared
-        let viewModel = ArticleViewModel(serviceManager: serviceManager)
+        let viewModel = ArticleViewModel(networkManager: networkManager)
 
         let articleViewController = ArticleViewController(viewModel: viewModel)
         let articleNavController = UINavigationController(rootViewController: articleViewController)
@@ -44,11 +43,13 @@ final class TabBarController: UITabBarController {
             image: UIImage(systemName: "plus"),
             tag: 2
         )
-
+        
+        let username = UserDefaults.standard.string(forKey: "userName")
+        
         let profileViewController = ProfileViewController()
         let profileNavController = UINavigationController(rootViewController: profileViewController)
         profileNavController.tabBarItem = UITabBarItem(
-            title: "Profile",
+            title: "\(username ?? "") Profile",
             image: UIImage(systemName: "person"),
             tag: 3
         )

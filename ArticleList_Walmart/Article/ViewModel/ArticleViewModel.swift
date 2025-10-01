@@ -43,7 +43,7 @@ struct Searchable<T> {
 }
 
 protocol ArticleViewModelProtocol {
-    func getDataFromServer() async
+    func getDataFromServer() async -> NetworkState?
     func getArticleCount() -> Int
     func getArticle(at index: Int) -> Article?
     var errorMessage: String { get }
@@ -61,30 +61,32 @@ class ArticleViewModel: ArticleViewModelProtocol {
     })
     
     var articles: [Article]
-//    var filteredArticles: [Article] = []
-//    var isSearching: Bool = false
     
-    var errorState: ServiceError?
+    var errorState: NetworkState?
     
-//    var networkManager = NetworkManager.shared
-//    private let networkManager: NetworkManagerProtocol
-    private let serviceManager: ServiceManagerProtocol
+    private let networkManager: NetworkManagerProtocol
 
-    init(serviceManager: ServiceManagerProtocol = ServiceManager.shared) {
-        self.serviceManager = serviceManager
+    init(networkManager: NetworkManagerProtocol) {
+        self.networkManager = networkManager
         self.articles = []
     }
-
+    
     @MainActor
-    func getDataFromServer() async {
-        do {
-            let fetchedList: ArticleList = try await serviceManager.getData(from: Server.endPoint.rawValue, type: ArticleList.self)
-            self.articles = fetchedList.articles ?? []
-        } catch let error as ServiceError {
-            self.errorState = error
-        } catch {
-            self.errorState = .networkState(.errorFetchingDat(error))
+    func getDataFromServer() async -> NetworkState? {
+        let fetchedState = await networkManager.getData(from: Server.endPoint.rawValue)
+        
+        switch fetchedState {
+        case .isLoading, .invalidURL, .errorFetchingData, .noDataFromServer:
+            errorState = fetchedState
+        case .success(let fetchedData):
+            if let fetchedList = self.networkManager.parse(data: fetchedData, type: ArticleList.self) {
+                articles = fetchedList.articles ?? []
+            }
+            else {
+                errorState = .noDataFromServer
+            }
         }
+        return self.errorState
     }
 
     func getArticleCount() -> Int {
@@ -109,19 +111,13 @@ class ArticleViewModel: ArticleViewModelProtocol {
             articles[index] = updatedArticle
         }
         
-//        if !filteredArticles.isEmpty && index < filteredArticles.count {
-//            filteredArticles[index] = updatedArticle
-//        }
     }
     
     func deleteArticle(at index: Int) {
         if index < articles.count {
             articles.remove(at: index)
         }
-        
-//        if !filteredArticles.isEmpty && index < filteredArticles.count {
-//            filteredArticles.remove(at: index)
-//        }
+
     }
 }
 
@@ -129,19 +125,14 @@ extension ArticleViewModel {
     var errorMessage: String {
         guard let errorState = errorState else { return "" }
         switch errorState {
-        case .networkState(let state):
-            switch state {
-            case .invalidURL:
-                return "Invalid URL"
-            case .invalidResponse(let statusCode):
-                return "Invalid response with status code \(statusCode)."
-            case .errorFetchingDat(let err):
-                return "Error fetching data: \(err.localizedDescription)"
-            case .noDataFromServer:
-                return "No data from server"
-            default:
-                return ""
-            }
+        case .invalidURL:
+            return "Invalid URL"
+        case .errorFetchingData:
+            return "Error fetching data"
+        case .noDataFromServer:
+            return "No data from server"
+        default :
+            return ""
         }
     }
 }

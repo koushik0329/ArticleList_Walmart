@@ -55,8 +55,6 @@ class DetailsViewController: UIViewController {
         return articleImageView
     }()
         
-//    var closure: ((Article?) -> Void)?
-        
     override func viewDidLoad() {
         super.viewDidLoad()
         
@@ -118,20 +116,6 @@ class DetailsViewController: UIViewController {
         descriptionLabel.text = article?.description
         commentTextField.text = article?.comment
         
-//        if let imageUrlString = article?.urlToImage, let imageUrl = URL(string: imageUrlString) {
-//            NetworkManager.shared.getData(from: imageUrl.absoluteString) { [weak self] data in
-//                guard let self = self,
-//                      let data = data,
-//                      let image = UIImage(data: data) else { return }
-//                
-//                DispatchQueue.main.async {
-//                    self.articleImageView.image = image
-//                }
-//            }
-//        } else {
-//            articleImageView.image = UIImage(systemName: "photo")
-//        }
-        
         if let urlString = article?.urlToImage, let url = URL(string: urlString) {
             URLSession.shared.dataTask(with: url) { [weak self] data, _, error in
                 guard let self = self, let data, error == nil else { return }
@@ -142,17 +126,12 @@ class DetailsViewController: UIViewController {
         } else {
             articleImageView.image = UIImage(systemName: "photo")
         }
-        
-//        if article?.comment != nil {
-//            commentTextField.text = article?.comment
-//        }
     }
 
     @objc private func backToPreviousScreen() {
         article?.comment =  commentTextField.text!
         article?.author = authorTextField.text!
         delegate?.didUpdateArticle(article!, at: indexPath!)
-//        closure?(article)
         navigationController?.popViewController(animated: true)
     }
     
@@ -160,7 +139,6 @@ class DetailsViewController: UIViewController {
         article?.comment =  commentTextField.text!
         article?.author = authorTextField.text!
         delegate?.didUpdateArticle(article!, at: indexPath!)
-//        closure?(article)
         navigationController?.popViewController(animated: true)
     }
 }
