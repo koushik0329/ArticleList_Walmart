@@ -122,25 +122,28 @@ class ArticleTableViewCell: UITableViewCell {
     
     
     // MARK: Configure Cell
-    @MainActor
     func configure(with article: Article) {
         authorLabel.text = article.author
         descriptionLabel.text = article.description
         publishedDateLabel.text = article.publishedDateOnly
         
+//        var receivedImageData: Data?
+        
+        guard let urlString = article.urlToImage else {
+            self.articleImageView.image = UIImage(systemName: "photo.trianglebadge.exclamationmark.fill")
+            return
+        }
+        
         Task {
-            guard let urlString = article.urlToImage else {
+            do {
+                let data: Data = try await ServiceManager.shared.getData(from: urlString, type: Data.self)
+                if let image = UIImage(data: data) {
+                    self.articleImageView.image = image
+                } else {
+                    self.articleImageView.image = UIImage(systemName: "photo.trianglebadge.exclamationmark.fill")
+                }
+            } catch {
                 self.articleImageView.image = UIImage(systemName: "photo.trianglebadge.exclamationmark.fill")
-                return
-            }
-            
-            let fetchedState = await NetworkManager.shared.getData(from: urlString)
-            switch fetchedState {
-            case .isLoading, .invalidURL, .errorFetchingData, .noDataFromServer:
-                self.articleImageView.image = UIImage(systemName: "photo.trianglebadge.exclamationmark.fill")
-            case .success(let fetchedData):
-                self.articleImageView.image = UIImage(data: fetchedData)
-
             }
         }
     }
