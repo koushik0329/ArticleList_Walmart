@@ -11,6 +11,10 @@ protocol ArticleTableViewCellDelegate: AnyObject {
     func didTapDeleteButton(for cell: ArticleTableViewCell)
 }
 
+final class ImageCache {
+    static let cache = NSCache<NSString, UIImage>()
+}
+
 class ArticleTableViewCell: UITableViewCell {
     
     weak var delegate: ArticleTableViewCellDelegate?
@@ -70,6 +74,8 @@ class ArticleTableViewCell: UITableViewCell {
     override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
         super.init(style: style, reuseIdentifier: reuseIdentifier)
         setupCell()
+        ImageCache.cache.countLimit = 5
+        ImageCache.cache.totalCostLimit = 1024 * 1024 * 5
     }
     
     required init?(coder: NSCoder) {
@@ -122,24 +128,33 @@ class ArticleTableViewCell: UITableViewCell {
     
     
     // MARK: Configure Cell
-    @MainActor
     func configure(with article: Article) {
         authorLabel.text = article.author
         descriptionLabel.text = article.description
         publishedDateLabel.text = article.publishedDateOnly
         
+        guard let urlString = article.urlToImage else {
+            self.articleImageView.image = UIImage(systemName: "photo.trianglebadge.exclamationmark.fill")
+            return
+        }
+        
+        if let cachedImage = ImageCache.cache.object(forKey: urlString as NSString) {
+            print(cachedImage)
+            self.articleImageView.image = cachedImage
+            return
+        }
+        
         Task {
-            guard let urlString = article.urlToImage else {
-                self.articleImageView.image = UIImage(systemName: "photo.trianglebadge.exclamationmark.fill")
-                return
-            }
-            
             let fetchedState = await NetworkManager.shared.getData(from: urlString)
             switch fetchedState {
             case .isLoading, .invalidURL, .errorFetchingData, .noDataFromServer:
                 self.articleImageView.image = UIImage(systemName: "photo.trianglebadge.exclamationmark.fill")
             case .success(let fetchedData):
-                self.articleImageView.image = UIImage(data: fetchedData)
+                if let image = UIImage(data: fetchedData) {
+//                    print("called")
+                    ImageCache.cache.setObject(image, forKey: urlString as NSString)
+                    self.articleImageView.image = image
+                }
             }
         }
     }
