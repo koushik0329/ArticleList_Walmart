@@ -140,6 +140,7 @@ class ArticleTableViewCell: UITableViewCell {
                 self.articleImageView.image = UIImage(systemName: "photo.trianglebadge.exclamationmark.fill")
             case .success(let fetchedData):
                 self.articleImageView.image = UIImage(data: fetchedData)
+
             }
         }
     }

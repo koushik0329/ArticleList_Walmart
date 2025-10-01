@@ -43,6 +43,7 @@ struct Searchable<T> {
 }
 
 protocol ArticleViewModelProtocol {
+
     func getDataFromServer() async -> NetworkState?
     func getArticleCount() -> Int
     func getArticle(at index: Int) -> Article?
@@ -62,15 +63,16 @@ class ArticleViewModel: ArticleViewModelProtocol {
     
     var articles: [Article]
     
-    var errorState: NetworkState?
+    var errorState: ServiceError?
     
     private let networkManager: NetworkManagerProtocol
 
-    init(networkManager: NetworkManagerProtocol) {
-        self.networkManager = networkManager
+
+    init(serviceManager: ServiceManagerProtocol = ServiceManager.shared) {
+        self.serviceManager = serviceManager
         self.articles = []
     }
-    
+   
     @MainActor
     func getDataFromServer() async -> NetworkState? {
         let fetchedState = await networkManager.getData(from: Server.endPoint.rawValue)
@@ -85,6 +87,7 @@ class ArticleViewModel: ArticleViewModelProtocol {
             else {
                 errorState = .noDataFromServer
             }
+
         }
         return self.errorState
     }
@@ -125,14 +128,19 @@ extension ArticleViewModel {
     var errorMessage: String {
         guard let errorState = errorState else { return "" }
         switch errorState {
-        case .invalidURL:
-            return "Invalid URL"
-        case .errorFetchingData:
-            return "Error fetching data"
-        case .noDataFromServer:
-            return "No data from server"
-        default :
-            return ""
+        case .networkState(let state):
+            switch state {
+            case .invalidURL:
+                return "Invalid URL"
+            case .invalidResponse(let statusCode):
+                return "Invalid response with status code \(statusCode)."
+            case .errorFetchingDat(let err):
+                return "Error fetching data: \(err.localizedDescription)"
+            case .noDataFromServer:
+                return "No data from server"
+            default:
+                return ""
+            }
         }
     }
 }

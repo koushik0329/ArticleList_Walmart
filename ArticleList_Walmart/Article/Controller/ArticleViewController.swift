@@ -40,7 +40,7 @@ class ArticleViewController: UIViewController, UISearchBarDelegate, UITableViewD
         
         setupSearchBar()
         setupTableView()
-        
+
         fetchArticles(showLoader: true)
         
         if articleCoordinatorProtocol == nil {
@@ -170,16 +170,20 @@ extension ArticleViewController {
 
 extension ArticleViewController {
     @objc private func refreshData() {
+
         fetchArticles(showLoader: false, isRefreshing: true)
+
     }
 }
+
 
 extension ArticleViewController: DetailsElementDelegate {
     func didUpdateArticle(_ article: Article, at indexPath: IndexPath) {
         viewModel.updateArticle(at: indexPath.row, with: article)
-        
+
         print(article.author ?? "default")
         print(article.comment ?? "default comment")
+
         
         DispatchQueue.main.async {
             self.articleTableView.reloadRows(at: [indexPath], with: .none)

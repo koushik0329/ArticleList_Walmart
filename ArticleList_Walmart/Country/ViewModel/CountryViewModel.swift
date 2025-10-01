@@ -25,7 +25,7 @@ class CountryViewModel: CountryViewModelProtocol {
         self.networkManager = networkManager
     }
     
-    
+
     func getCountriesFromServer() async -> NetworkState? {
         let fetchedState = await networkManager.getData(from: Server.countryEndPoint.rawValue)
         
@@ -33,6 +33,7 @@ class CountryViewModel: CountryViewModelProtocol {
             case .isLoading, .invalidURL, .errorFetchingData, .noDataFromServer:
                 errorState = fetchedState
             case .success(let fetchedData):
+
                 if let fetchedCountries = self.networkManager.parse(data: fetchedData, type: [Country].self) {
                     self.countries = fetchedCountries
                     self.filteredCountries = self.countries

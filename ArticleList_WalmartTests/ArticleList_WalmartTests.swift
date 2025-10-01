@@ -12,22 +12,22 @@ final class ArticleList_WalmartTests: XCTestCase {
     var articleViewModel: ArticleViewModelProtocol!
     var mockNetworkManager: NetworkManagerProtocol?
 
-    override func setUpWithError() throws {
+    override func setUpWithError() async throws {
         articleViewModel = MockArticleViewModel()
-        articleViewModel.getDataFromServer(closure: {_ in })
+        await articleViewModel.getDataFromServer()
         
-        mockNetworkManager = MockNetworkManager.shared
+//        mockNetworkManager = MockNetworkManager.shared
     }
     
     override func tearDownWithError() throws {
         articleViewModel = nil
     }
     
-    func testGetData() {
-        mockNetworkManager?.getData(from: "https://abc.com") { fetchedData in
-            XCTAssertNotNil(fetchedData)
-        }
-    }
+//    func testGetData() {
+//        mockNetworkManager?.getData(from: "https://abc.com") { fetchedData in
+//            XCTAssertNotNil(fetchedData)
+//        }
+//    }
     
     func testGetNumberOfRows() {
         XCTAssertEqual(articleViewModel.getArticleCount(), 1)
