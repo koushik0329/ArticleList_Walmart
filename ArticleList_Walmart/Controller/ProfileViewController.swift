@@ -5,11 +5,9 @@
 //  Created by Koushik Reddy Kambham on 10/1/25.
 //
 
-
-
 import UIKit
 
-class LandingViewController : UIViewController {
+class ProfileViewController : UIViewController {
     let textLabel : UILabel = {
         let label = UILabel()
         label.textAlignment = .center

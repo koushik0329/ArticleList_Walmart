@@ -43,11 +43,13 @@ final class TabBarController: UITabBarController {
             image: UIImage(systemName: "plus"),
             tag: 2
         )
-
+        
+        let username = UserDefaults.standard.string(forKey: "userName")
+        
         let profileViewController = ProfileViewController()
         let profileNavController = UINavigationController(rootViewController: profileViewController)
         profileNavController.tabBarItem = UITabBarItem(
-            title: "Profile",
+            title: "\(username ?? "") Profile",
             image: UIImage(systemName: "person"),
             tag: 3
         )

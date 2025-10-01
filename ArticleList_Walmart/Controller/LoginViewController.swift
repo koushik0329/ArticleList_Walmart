@@ -1,5 +1,14 @@
 //
 //  LoginViewController.swift
+//  ArticleList_Walmart
+//
+//  Created by Koushik Reddy Kambham on 10/1/25.
+//
+
+
+
+//
+//  LoginViewController.swift
 //  Login_Landing
 //
 //  Created by Koushik Reddy Kambham on 9/30/25.
@@ -8,10 +17,21 @@
 import UIKit
 
 class LoginViewController : UIViewController {
+    
+    let titleLabel: UILabel = {
+        let label = UILabel()
+        label.text = "Login Page"
+        label.font = UIFont.boldSystemFont(ofSize: 28)
+        label.textAlignment = .center
+        label.translatesAutoresizingMaskIntoConstraints = false
+        return label
+    }()
+    
     let usernameTextField: UITextField = {
         let textField = UITextField()
         textField.placeholder = "Username"
         textField.borderStyle = .roundedRect
+        textField.autocapitalizationType = .none
         textField.translatesAutoresizingMaskIntoConstraints = false
         return textField
     }()
@@ -28,6 +48,9 @@ class LoginViewController : UIViewController {
     let loginButton: UIButton = {
         let button = UIButton(type: .system)
         button.setTitle("Login", for: .normal)
+        button.layer.cornerRadius = 8
+        button.layer.borderWidth = 1
+        button.layer.borderColor = UIColor.black.cgColor
         button.translatesAutoresizingMaskIntoConstraints = false
         return button
     }()
@@ -42,21 +65,25 @@ class LoginViewController : UIViewController {
     func setupUI() {
         view.backgroundColor = .systemBackground
         
+        view.addSubview(titleLabel)
         view.addSubview(usernameTextField)
         view.addSubview(passwordTextField)
         view.addSubview(loginButton)
         NSLayoutConstraint.activate([
-            usernameTextField.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 20),
-            usernameTextField.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
-            usernameTextField.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
+            titleLabel.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 80),
+            titleLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor),
             
-            passwordTextField.topAnchor.constraint(equalTo: usernameTextField.bottomAnchor, constant: 10),
-            passwordTextField.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
-            passwordTextField.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
+            usernameTextField.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: 40),
+            usernameTextField.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 30),
+            usernameTextField.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -30),
             
-            loginButton.topAnchor.constraint(equalTo: passwordTextField.bottomAnchor, constant: 10),
-            loginButton.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
-            loginButton.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
+            passwordTextField.topAnchor.constraint(equalTo: usernameTextField.bottomAnchor, constant: 20),
+            passwordTextField.leadingAnchor.constraint(equalTo: usernameTextField.leadingAnchor),
+            passwordTextField.trailingAnchor.constraint(equalTo: usernameTextField.trailingAnchor),
+            
+            loginButton.topAnchor.constraint(equalTo: passwordTextField.bottomAnchor, constant: 30),
+            loginButton.leadingAnchor.constraint(equalTo: usernameTextField.leadingAnchor),
+            loginButton.trailingAnchor.constraint(equalTo: usernameTextField.trailingAnchor),
         ])
     }
     
@@ -69,7 +96,7 @@ class LoginViewController : UIViewController {
         
         objUserDefault.synchronize()
         
-        let landingVC = LandingViewController()
+        let landingVC = TabBarController()
         present(landingVC, animated: true, completion: nil)
     }
 }
