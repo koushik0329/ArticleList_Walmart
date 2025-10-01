@@ -1,5 +1,5 @@
 
-````markdown
+
 # 📰 ArticleList Walmart
 
 A modern iOS news application built with **Swift** and **UIKit**, showcasing **Clean Architecture** and **Protocol-Oriented Programming**.  
@@ -84,8 +84,12 @@ class NetworkManager: NetworkManagerProtocol {
 
 ## 📸 Screenshots
 
-**Login Screen** <img width="432" height="853" alt="image" src="https://github.com/user-attachments/assets/8cdbbc73-4d11-4cce-8623-992c347c405a" />
+Login Screen 
 
-**Articles List** <img width="410" height="846" alt="image" src="https://github.com/user-attachments/assets/1d73cd56-620a-48fd-9db9-39280ff30fe8" />
+<img width="432" height="853" alt="image" src="https://github.com/user-attachments/assets/8cdbbc73-4d11-4cce-8623-992c347c405a" />
+
+Articles List
+
+<img width="410" height="846" alt="image" src="https://github.com/user-attachments/assets/1d73cd56-620a-48fd-9db9-39280ff30fe8" />
 
 
