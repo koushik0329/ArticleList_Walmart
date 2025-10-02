@@ -11,8 +11,22 @@ protocol ArticleTableViewCellDelegate: AnyObject {
     func didTapDeleteButton(for cell: ArticleTableViewCell)
 }
 
-final class ImageCache {
-    static let cache = NSCache<NSString, UIImage>()
+class ImageCacheManager {
+    static let shared = ImageCacheManager()
+    private let cache = NSCache<NSString, UIImage>()
+
+    private init() {
+        cache.countLimit = 30
+        cache.totalCostLimit = 1024 * 1024 * 30
+    }
+
+    func setImage(_ image: UIImage, forKey key: String) {
+        cache.setObject(image, forKey: key as NSString)
+    }
+
+    func getImage(forKey key: String) -> UIImage? {
+        return cache.object(forKey: key as NSString)
+    }
 }
 
 class ArticleTableViewCell: UITableViewCell {
@@ -74,8 +88,6 @@ class ArticleTableViewCell: UITableViewCell {
     override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
         super.init(style: style, reuseIdentifier: reuseIdentifier)
         setupCell()
-        ImageCache.cache.countLimit = 5
-        ImageCache.cache.totalCostLimit = 1024 * 1024 * 5
     }
     
     required init?(coder: NSCoder) {
@@ -138,7 +150,7 @@ class ArticleTableViewCell: UITableViewCell {
             return
         }
         
-        if let cachedImage = ImageCache.cache.object(forKey: urlString as NSString) {
+        if let cachedImage = ImageCacheManager.shared.getImage(forKey: urlString) {
             print(cachedImage)
             self.articleImageView.image = cachedImage
             return
@@ -152,7 +164,7 @@ class ArticleTableViewCell: UITableViewCell {
             case .success(let fetchedData):
                 if let image = UIImage(data: fetchedData) {
 //                    print("called")
-                    ImageCache.cache.setObject(image, forKey: urlString as NSString)
+                    ImageCacheManager.shared.setImage(image, forKey: urlString)
                     self.articleImageView.image = image
                 }
             }
