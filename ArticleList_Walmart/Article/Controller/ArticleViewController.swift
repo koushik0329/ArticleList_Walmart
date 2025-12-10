@@ -9,6 +9,8 @@ import UIKit
 
 class ArticleViewController: UIViewController, UISearchBarDelegate, UITableViewDelegate, UITableViewDataSource {
     
+    var retryCount: Int = 0
+    
     var viewModel: ArticleViewModelProtocol!
     var articleCoordinatorProtocol: ArticleCoordinatorProtocol!
     
@@ -197,9 +199,20 @@ extension ArticleViewController: ArticleTableViewCellDelegate {
     }
 }
 
+extension ArticleViewController : RetryAlertDelegate {
+ 
+    func didTapTryAgain() {
+        fetchArticles(showLoader: false, isRefreshing: false, retryCount: (retryCount)+1)
+    }
+    
+    func didTapOK() {
+        navigationController?.popViewController(animated: true)
+    }
+}
+
 extension ArticleViewController {
     @MainActor
-    func fetchArticles(showLoader: Bool = true, isRefreshing: Bool = false) {
+    func fetchArticles(showLoader: Bool = true, isRefreshing: Bool = false, retryCount: Int = 0) {
         if showLoader {
             spinner.startAnimating()
         }
@@ -213,13 +226,15 @@ extension ArticleViewController {
             }
             
             if isRefreshing {
+                self.retryCount = 0
                 refreshControl.endRefreshing()
             }
             
             if errorState == nil {
                 articleTableView.reloadData()
             } else {
-                showAlert(title: "Error", message: viewModel.errorMessage)
+                self.retryCount = retryCount
+                showAlert(title: "Error", message: viewModel.errorMessage, retryCount: retryCount, delegate: self)
             }
         }
     }

@@ -7,10 +7,26 @@
 
 import UIKit
 
+protocol RetryAlertDelegate: AnyObject {
+    func didTapTryAgain()
+    func didTapOK()
+}
+
 extension UIViewController {
-    func showAlert(title: String, message: String) {
+    func showAlert(title: String, message: String, retryCount: Int, delegate: RetryAlertDelegate?) {
         let alertController = UIAlertController(title: title, message: message, preferredStyle: .alert)
-        alertController.addAction(UIAlertAction(title: "OK", style: .default))
+        
+        if retryCount < 3 {
+            let tryagainAction = UIAlertAction(title: "Try Again", style: .default) { _ in
+                delegate?.didTapTryAgain()
+            }
+            alertController.addAction(tryagainAction)
+        }
+        
+        let okAction = UIAlertAction(title: "OK", style: .default) { _ in
+            delegate?.didTapOK()
+        }
+        alertController.addAction(okAction)
         self.present(alertController, animated: true)
     }
 }

@@ -9,6 +9,8 @@ import UIKit
 
 class CountryViewController: UIViewController, UISearchBarDelegate, UITableViewDelegate, UITableViewDataSource {
     
+    var retryCount: Int = 0
+    
     var countryLabel: UILabel!
     var searchBar: UISearchBar!
     var countryTableView: UITableView!
@@ -127,9 +129,20 @@ class CountryViewController: UIViewController, UISearchBarDelegate, UITableViewD
     }
 }
 
+extension CountryViewController : RetryAlertDelegate {
+ 
+    func didTapTryAgain() {
+        fetchCountries(isRefreshing: false, retryCount: (retryCount)+1)
+    }
+    
+    func didTapOK() {
+        navigationController?.popViewController(animated: true)
+    }
+}
+
 extension CountryViewController {
     @MainActor
-    func fetchCountries(isRefreshing: Bool = false) {
+    func fetchCountries(isRefreshing: Bool = false, retryCount: Int = 0) {
         Task {
             let errorState = await countryViewModel.getCountriesFromServer()
             
@@ -138,10 +151,12 @@ extension CountryViewController {
             }
             
             if errorState == nil {
+                self.retryCount = 0
                 countryTableView.reloadData()
             }
             else {
-                showAlert(title: "Error", message: countryViewModel.errorMessage)
+                self.retryCount = retryCount
+                showAlert(title: "Error", message: countryViewModel.errorMessage, retryCount: retryCount, delegate: self)
             }
         }
     }
