@@ -39,6 +39,12 @@ class CountryViewController: UIViewController, UISearchBarDelegate, UITableViewD
         navigationController?.navigationBar.isHidden = true
         
         fetchCountries()
+        
+        if ConnectivityManager.shared.isConnected {
+            print("we're connected")
+        } else {
+            print("we're not connected")
+        }
     }
     
     override func viewWillAppear(_ animated: Bool) {
