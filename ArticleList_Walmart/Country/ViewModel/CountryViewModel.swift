@@ -37,9 +37,10 @@ class CountryViewModel: CountryViewModelProtocol {
                 errorState = fetchedState
             case .success(let fetchedData):
                 if let fetchedCountries = self.networkManager.parse(data: fetchedData, type: [Country].self) {
-                    saveCountriesToCoreData(fetchedCountries)
                     self.countries = fetchedCountries
-                    self.filteredCountries = self.countries
+                    self.filteredCountries = fetchedCountries
+
+                    saveCountriesToCoreData(fetchedCountries)
                     self.errorState = nil
                 } else {
                     self.errorState = .noDataFromServer
@@ -102,15 +103,28 @@ extension CountryViewModel {
         try? context.save()
     }
     
-    func loadCountriesFromCoreData() -> [Country] {
+    func getCountriesFromCoreData() -> Bool {
         let request: NSFetchRequest<CountryEntity> = CountryEntity.fetchRequest()
-        let result = (try? context.fetch(request)) ?? []
-
-        return result.map {
-            Country(capital: $0.capital,
-                    code: $0.code,
-                    name: $0.name,
-                    region: $0.region)
+        
+        do {
+            let result = try context.fetch(request)
+            
+            if result.isEmpty { return false }
+            self.countries = result.map {
+                Country(capital: $0.capital,
+                        code: $0.code,
+                        name: $0.name,
+                        region: $0.region)
+            }
+//            self.countries = result
+            
+            self.filteredCountries = self.countries
+            return true
+            
+        } catch {
+            print("Error fetching local data: \(error)")
+            return false
         }
     }
+
 }

@@ -144,9 +144,22 @@ extension CountryViewController {
     @MainActor
     func fetchCountries(isRefreshing: Bool = false, retryCount: Int = 0) {
         Task {
+            
+            if retryCount >= 3 {
+                print("Using Core Data because retry limit reached")
+                let loaded = countryViewModel.getCountriesFromCoreData()
+                    
+                if loaded {
+                    countryTableView.reloadData()
+                } else {
+                    showAlert(title: "Error", message: "No offline data available.", retryCount: retryCount, delegate: self)
+                }
+                return
+            }
+            
             let errorState = await countryViewModel.getCountriesFromServer()
             
-            if !isRefreshing {
+            if isRefreshing {
                 refreshControl.endRefreshing()
             }
             
